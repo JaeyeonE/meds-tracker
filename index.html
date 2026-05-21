@@ -3,334 +3,427 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>약품 자동 분류 시스템 — 일정 & 작업 트래커</title>
-
-<!-- Firebase SDK (실시간 동기화) -->
+<title>약품 자동 분류 — 일정 트래커</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
 <style>
 :root {
-  --p1:#2196F3;--p2:#43A047;--p3:#FB8C00;--p4:#8E24AA;--p5:#E53935;--rl:#00897B;
-  --bg:#F0F4F8;--card:#fff;--text:#1A2332;--muted:#607D8B;
-  --r1:#1565C0;--r2:#1B5E20;--r3:#BF360C;--r4:#004D40;--r5:#37474F;--ra:#4A148C;
-  --s0:#90A4AE;--s1:#1E88E5;--s2:#43A047;--s3:#E53935;
+  --navy:       #1E3A5F;
+  --navy-dark:  #0D1B2A;
+  --navy-mid:   #2C4A7C;
+  --yellow:     #FFD600;
+  --yellow-lt:  #FFF8E1;
+  --yellow-bd:  #FDE68A;
+  --bg:         #F2F4F8;
+  --card:       #FFFFFF;
+  --border:     #DDE3EC;
+  --gray-lt:    #EEF1F7;
+  --text:       #1A2332;
+  --text-mid:   #3D4E63;
+  --text-muted: #6B7A8D;
+  --s0: #94A3B8;
+  --s1: #3B82F6;
+  --s2: #22C55E;
+  --s3: #EF4444;
+  --p1: #3B82F6; --p2: #22C55E; --p3: #F59E0B;
+  --p4: #8B5CF6; --p5: #EF4444; --rl: #14B8A6;
+  --r: 8px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Apple SD Gothic Neo',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body{font-family:-apple-system,'Apple SD Gothic Neo',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
 
-/* HEADER */
-header{background:linear-gradient(135deg,#0D1B2A 0%,#1A3A5C 60%,#0D4A6B 100%);color:#fff;padding:24px 24px 18px;text-align:center}
-header h1{font-size:1.55rem;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
-header .sub{opacity:.7;font-size:.8rem;margin-bottom:12px}
-.meta-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:10px}
-.meta-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:.74rem}
-.meta-chip span{font-weight:700;color:#64B5F6}
-/* Sync status bar */
-.sync-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:7px 16px;background:rgba(0,0,0,.25);border-radius:8px;margin:0 auto;width:fit-content;font-size:.75rem}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#90A4AE;flex-shrink:0;transition:background .3s}
-.sync-dot.online{background:#4CAF50;box-shadow:0 0 6px #4CAF5099}
-.sync-dot.offline{background:#F44336}
-.sync-dot.local{background:#FF9800}
-#lastUpdate{opacity:.6;font-size:.7rem}
+/* ── HEADER ── */
+.site-header{background:var(--navy-dark);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.header-main{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid rgba(255,255,255,.07)}
+.hdr-icon{width:34px;height:34px;background:var(--yellow);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hdr-title h1{font-size:.95rem;font-weight:700;color:#fff;line-height:1.2}
+.hdr-title p{font-size:.68rem;color:rgba(255,255,255,.45);margin-top:1px}
+.hdr-chips{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hdr-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:3px 9px;font-size:.69rem;color:rgba(255,255,255,.6)}
+.hdr-chip b{color:var(--yellow)}
+.sync-pill{display:flex;align-items:center;gap:5px;font-size:.69rem;color:rgba(255,255,255,.55);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 10px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#94A3B8;flex-shrink:0;transition:background .3s}
+.sync-dot.online{background:#22C55E;box-shadow:0 0 5px #22C55E99}
+.sync-dot.offline{background:#EF4444}
+.sync-dot.local{background:#F59E0B}
+.header-progress{padding:7px 22px;display:flex;align-items:center;gap:12px}
+.hpb-wrap{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.hpb-fill{height:100%;background:var(--yellow);border-radius:2px;transition:width .5s ease}
+.hpb-pct{font-size:.75rem;font-weight:800;color:var(--yellow);min-width:34px}
+.hpb-counts{display:flex;gap:10px}
+.hpb-c{font-size:.67rem;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:3px}
+.hpb-cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+#lastUpdate{font-size:.65rem;color:rgba(255,255,255,.3)}
 
-/* SETUP BANNER */
-.setup-banner{background:linear-gradient(135deg,#1A237E,#283593);color:#fff;padding:14px 20px;margin:12px 20px;border-radius:10px;font-size:.82rem}
-.setup-banner h4{font-size:.9rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-.setup-banner ol{padding-left:18px;line-height:1.9}
-.setup-banner code{background:rgba(255,255,255,.15);border-radius:3px;padding:1px 5px;font-family:monospace;font-size:.8rem}
-.setup-banner .hidden{display:none}
-.setup-toggle{background:rgba(255,255,255,.15);border:none;border-radius:6px;color:#fff;padding:5px 12px;cursor:pointer;font-size:.76rem;margin-top:8px}
-.setup-toggle:hover{background:rgba(255,255,255,.25)}
+/* ── LAYOUT ── */
+.wrap{max-width:1520px;margin:0 auto;padding:18px 18px}
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.sec-accent{display:inline-block;width:3px;height:13px;background:var(--yellow);border-radius:2px;flex-shrink:0}
+.sec-label{font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+.sec-line{flex:1;height:1px;background:var(--border)}
 
-/* NOTICE */
-.notice{background:#FFF9C4;border-left:4px solid #F9A825;padding:9px 16px;margin:10px 20px;border-radius:4px;font-size:.79rem;color:#5D4037}
+/* ── HINT BANNER ── */
+.hint-banner{background:var(--yellow-lt);border:1.5px solid var(--yellow-bd);border-radius:var(--r);padding:13px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start}
+.hint-banner.hidden{display:none}
+.hint-icon{font-size:1.3rem;flex-shrink:0;line-height:1}
+.hint-body h4{font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:5px}
+.hint-body ul{font-size:.74rem;color:var(--text-mid);line-height:1.85;padding-left:16px}
+.hint-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 4px;flex-shrink:0;line-height:1}
 
-/* LAYOUT */
-.wrap{max-width:1440px;margin:0 auto;padding:0 16px}
-.section-title{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:22px 0 9px;padding-left:2px;display:flex;align-items:center;gap:8px}
-.section-title::after{content:'';flex:1;height:1px;background:#DDE3EA}
-
-/* TRACKER TOP */
-.tracker-top{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
-@media(max-width:700px){.tracker-top{grid-template-columns:1fr}}
-.progress-card,.today-card{background:var(--card);border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.progress-card h3,.today-card h3{font-size:.79rem;font-weight:700;color:var(--muted);margin-bottom:10px}
-.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
-.pb-wrap{flex:1;background:#EEF2F7;border-radius:6px;height:13px;overflow:hidden}
-.pb-fill{height:100%;border-radius:6px;transition:width .5s ease;background:linear-gradient(90deg,var(--p2),#66BB6A)}
-.progress-pct{font-size:.85rem;font-weight:800;color:var(--p2);min-width:36px;text-align:right}
-.status-counts{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.sc-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.73rem;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none}
-.sc-pill:hover{opacity:.85}
-.sc-pill.active{border-color:currentColor}
-.sc-dot{width:8px;height:8px;border-radius:50%}
-.today-dday{display:inline-block;background:#1A2332;color:#64B5F6;border-radius:5px;padding:2px 8px;font-size:.73rem;font-weight:700;margin-bottom:8px}
-.today-task-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #F0F4F8;font-size:.77rem}
+/* ── TODAY PANEL ── */
+.today-panel{background:var(--navy);border-radius:var(--r);padding:16px 20px;margin-bottom:18px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.today-dday-box{flex-shrink:0;min-width:80px;text-align:center}
+.today-badge{background:var(--yellow);color:var(--navy-dark);font-size:1.45rem;font-weight:800;padding:5px 16px;border-radius:7px;display:block;line-height:1.3}
+.today-date-lbl{font-size:.67rem;color:rgba(255,255,255,.45);margin-top:4px}
+.today-tasks-col{flex:1;min-width:200px}
+.today-tasks-col h3{font-size:.69rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.today-task-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.77rem;color:rgba(255,255,255,.82)}
 .today-task-item:last-child{border-bottom:none}
-.deadline-counter{margin-top:8px;font-size:.78rem;color:var(--muted)}
-.deadline-counter strong{color:var(--p5);font-size:1.05rem}
+.tphase-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.today-rem-col{flex-shrink:0;min-width:110px;text-align:center}
+.today-rem-col h3{font-size:.69rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.rem-num{font-size:2.2rem;font-weight:800;color:var(--yellow);line-height:1}
+.rem-sub{font-size:.69rem;color:rgba(255,255,255,.4);margin-top:2px}
 
-/* STATS */
-.stats{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
-.stat-card{background:var(--card);border-radius:10px;padding:11px 16px;flex:1;min-width:120px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.stat-card .val{font-size:1.4rem;font-weight:800}
-.stat-card .lbl{font-size:.7rem;color:var(--muted);margin-top:2px}
+/* ── GANTT ── */
+.gantt-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:18px;overflow:hidden}
+.gantt-toolbar{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--gray-lt);flex-wrap:wrap}
+.gantt-legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto}
+.gl-item{display:flex;align-items:center;gap:4px;font-size:.67rem;color:var(--text-muted)}
+.gl-bar{width:14px;height:7px;border-radius:2px}
+.gl-line-y{width:10px;height:2px;background:var(--yellow);border-radius:1px}
+.gl-line-o{width:10px;height:2px;background:#F59E0B;border-radius:1px}
+.gantt-scroll{overflow-x:auto}
+.gantt-inner{min-width:940px;padding:0 14px 12px}
 
-/* PHASE CARDS */
-.phase-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:9px;margin-bottom:18px}
-.phase-card{background:var(--card);border-radius:10px;padding:12px 14px;border-top:4px solid;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.phase-card h3{font-size:.82rem;font-weight:700;margin-bottom:4px}
-.phase-card .dates{font-size:.73rem;color:var(--muted);margin-bottom:5px}
-.phase-mini-bar{background:#EEF2F7;border-radius:3px;height:5px;overflow:hidden;margin-top:5px}
-.phase-mini-fill{height:100%;border-radius:3px;transition:width .4s}
+/* date header */
+.g-date-row{display:grid;grid-template-columns:188px repeat(28,1fr);padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:3px}
+.g-date-spacer{}
+.g-date-cell{text-align:center;font-size:.58rem;color:var(--text-muted);line-height:1.3}
+.g-date-cell.today-col .g-month{color:var(--navy);font-weight:700}
+.g-date-cell.today-col .g-day{color:var(--navy)}
+.g-month{font-weight:600;font-size:.6rem}
+.g-day{color:var(--text-muted);font-size:.56rem}
 
-/* CHECKPOINTS */
-.checkpoints{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
-@media(max-width:700px){.checkpoints{grid-template-columns:1fr}}
-.checkpoint{background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:2px solid #FF9800;border-radius:10px;padding:11px 14px;display:flex;gap:9px}
-.checkpoint h4{font-size:.82rem;font-weight:700;color:#E65100;margin-bottom:3px}
-.checkpoint p{font-size:.74rem;color:#5D4037;line-height:1.5}
-.buffer-box{background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:2px solid #43A047;border-radius:10px;padding:11px 14px;margin-bottom:18px;display:flex;gap:9px}
-.buffer-box h4{font-size:.82rem;font-weight:700;color:#1B5E20;margin-bottom:3px}
-.buffer-box p{font-size:.74rem;color:#2E7D32;line-height:1.5}
+/* section rows */
+.g-sec-row{display:grid;grid-template-columns:188px 1fr;margin:10px 0 2px}
+.g-sec-name{font-size:.63rem;font-weight:700;color:var(--text-muted);display:flex;align-items:center;gap:5px;padding:2px 0}
+.g-sec-name::before{content:'';width:10px;height:1px;background:var(--border);display:inline-block}
+.g-sec-line{height:1px;background:var(--border);margin-top:9px}
 
-/* GANTT */
-.gantt-wrap{overflow-x:auto;margin-bottom:22px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.gantt{background:var(--card);border-radius:10px;padding:12px 8px 8px;min-width:880px}
-.gantt-header{display:grid;grid-template-columns:175px repeat(28,1fr);gap:1px;margin-bottom:3px}
-.gantt-label-head{font-size:.64rem;color:var(--muted);padding:0 4px}
-.gantt-day-num{font-size:.57rem;color:var(--muted);text-align:center}
-.gantt-row{display:grid;grid-template-columns:175px repeat(28,1fr);align-items:center;min-height:23px;margin-bottom:2px}
-.gantt-name{font-size:.68rem;padding:0 5px 0 3px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gantt-bar-cell{height:19px;position:relative}
-.gantt-bar{height:13px;border-radius:2px;margin-top:3px;opacity:.86;transition:opacity .2s}
-.gantt-bar.done-bar{opacity:.35;background:var(--s2)!important}
-.gantt-milestone{width:100%;height:2px;background:#E8EDF2;border-radius:1px;margin-top:8px}
-.gantt-cp{height:19px;width:2px;border-radius:1px;position:absolute;top:0;left:50%;transform:translateX(-50%);background:#FF9800;z-index:1}
-.gantt-today-line{height:19px;width:2px;border-radius:1px;position:absolute;top:0;left:50%;transform:translateX(-50%);background:#E53935;z-index:2}
+/* task row */
+.g-row{display:grid;grid-template-columns:188px repeat(28,1fr);align-items:center;min-height:27px;border-radius:4px;margin-bottom:1px}
+.g-row:hover{background:var(--gray-lt)}
+.g-name{font-size:.69rem;color:var(--text-mid);padding:0 8px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.g-name.done-name{opacity:.4;text-decoration:line-through}
+.g-sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.g-cell{height:27px;position:relative;display:flex;align-items:center}
+.g-cell.today-bg{background:rgba(255,214,0,.07)}
+.g-bar{position:absolute;left:1px;right:1px;height:13px;border-radius:3px;opacity:.88}
+.g-bar.done-bar{opacity:.25}
+.g-bar.bar-s{left:2px;right:1px;border-radius:3px 0 0 3px}
+.g-bar.bar-m{left:0;right:0;border-radius:0}
+.g-bar.bar-e{left:0;right:2px;border-radius:0 3px 3px 0}
+.g-bar.bar-only{left:2px;right:2px;border-radius:3px}
+.g-today-line{position:absolute;top:2px;bottom:2px;width:2px;background:var(--yellow);left:50%;transform:translateX(-50%);z-index:3;border-radius:1px}
+.g-cp-line{position:absolute;top:2px;bottom:2px;width:2px;background:#F59E0B;left:50%;transform:translateX(-50%);z-index:2;border-radius:1px}
+.g-bg-stripe{position:absolute;inset:0;background:rgba(255,214,0,.06)}
 
-/* LEGEND */
-.legend{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:.72rem}
-.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+/* ── STAT CARDS ── */
+.stat-row{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 15px;flex:1;min-width:108px;cursor:pointer;transition:border-color .15s,box-shadow .15s;user-select:none}
+.stat-card:hover{border-color:var(--navy-mid)}
+.stat-card.active{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.1)}
+.stat-val{font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:3px}
+.stat-lbl{font-size:.68rem;color:var(--text-muted);font-weight:500}
+.sc-all .stat-val{color:var(--navy)}
+.sc-s0  .stat-val{color:var(--s0)}
+.sc-s1  .stat-val{color:var(--s1)}
+.sc-s2  .stat-val{color:var(--s2)}
+.sc-s3  .stat-val{color:var(--s3)}
 
-/* FILTER */
-.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:10px}
-.filter-btn{padding:4px 12px;border-radius:20px;border:1.5px solid #CFD8DC;background:#fff;cursor:pointer;font-size:.73rem;color:var(--muted);font-weight:600;transition:all .15s}
-.filter-btn:hover{background:#F0F4F8}
-.filter-btn.active{color:#fff;border-color:transparent}
-.filter-sep{width:1px;height:18px;background:#DDE3EA}
-.reset-btn{margin-left:auto;padding:4px 11px;border-radius:6px;border:1px solid #CFD8DC;background:#fff;cursor:pointer;font-size:.72rem;color:var(--muted);transition:background .15s}
-.reset-btn:hover{background:#FFEBEE;color:#E53935;border-color:#E53935}
+/* ── PHASE CARDS ── */
+.phase-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;margin-bottom:18px}
+.phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;border-left:4px solid}
+.phase-card h4{font-size:.76rem;font-weight:700;margin-bottom:2px}
+.pc-dates{font-size:.65rem;color:var(--text-muted);margin-bottom:5px}
+.pc-prog-text{font-size:.68rem;color:var(--text-muted);margin-bottom:4px}
+.pc-bar{height:4px;background:var(--gray-lt);border-radius:2px;overflow:hidden}
+.pc-fill{height:100%;border-radius:2px;transition:width .4s}
 
-/* TABLE */
-.task-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:22px}
-.task-table th{background:#1A2332;color:#fff;padding:8px 9px;font-size:.71rem;font-weight:600;text-align:left;white-space:nowrap}
-.task-table td{padding:7px 9px;border-bottom:1px solid #EEF2F7;vertical-align:middle;font-size:.76rem}
-.task-table tr.task-row:hover td{background:#F8FAFC;cursor:pointer}
-.task-table tr.detail-row td{background:#FAFBFD;padding:0}
-.task-table tr.detail-row.hidden{display:none}
-.task-table tr.task-row.hidden-filter{display:none}
-.task-table tr.task-row.done-row .task-name-cell{text-decoration:line-through;color:var(--muted)}
-.task-table tr.task-row.done-row td{opacity:.6}
-.task-table tr.task-row.done-row td:first-child,.task-table tr.task-row.done-row td:nth-child(2){opacity:1}
-
-/* STATUS BUTTON */
-.status-btn{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:12px;border:none;cursor:pointer;font-size:.7rem;font-weight:700;color:#fff;transition:all .15s;white-space:nowrap;min-width:60px;justify-content:center}
-.status-btn:hover{filter:brightness(1.1);transform:scale(1.04)}
-.status-btn.s0{background:var(--s0)}.status-btn.s1{background:var(--s1)}.status-btn.s2{background:var(--s2)}.status-btn.s3{background:var(--s3)}
-
-/* BADGES */
-.phase-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap}
-.resp-badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:.63rem;font-weight:600;color:#fff;margin:1px 1px 1px 0;white-space:nowrap}
-.expand-btn{background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:4px;font-size:.7rem;color:var(--muted);user-select:none}
-.expand-btn:hover{background:#EEF2F7}
-.expand-btn.open{color:var(--p1)}
-
-/* DETAIL */
-.detail-inner{padding:11px 13px 13px 34px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-@media(max-width:700px){.detail-inner{grid-template-columns:1fr;padding-left:13px}}
-.det-block{background:#fff;border:1px solid #E8EDF2;border-radius:7px;padding:8px 10px}
-.det-block h5{font-size:.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.det-block p{font-size:.75rem;line-height:1.55;color:var(--text)}
-.notes-block{grid-column:1/-1;background:#fff;border:1px solid #E8EDF2;border-radius:7px;padding:8px 10px}
-.notes-block h5{font-size:.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.notes-input{width:100%;border:1px solid #DDE3EA;border-radius:5px;padding:6px 9px;font-size:.76rem;font-family:inherit;resize:vertical;min-height:52px;color:var(--text);transition:border .2s}
-.notes-input:focus{outline:none;border-color:var(--p1)}
+/* ── TABLE ── */
+.table-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
+.table-toolbar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--gray-lt);flex-wrap:wrap}
+.f-btn{padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:.7rem;color:var(--text-muted);font-weight:600;transition:all .13s;white-space:nowrap}
+.f-btn:hover{background:var(--bg)}
+.f-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.f-sep{width:1px;height:16px;background:var(--border);flex-shrink:0}
+.f-reset{margin-left:auto;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:.69rem;color:var(--text-muted);transition:all .13s}
+.f-reset:hover{background:#FEE2E2;color:#EF4444;border-color:#EF4444}
+.task-table{width:100%;border-collapse:collapse}
+.task-table th{background:var(--navy-dark);color:rgba(255,255,255,.65);padding:9px 12px;font-size:.68rem;font-weight:600;text-align:left;white-space:nowrap}
+.task-table td{padding:9px 12px;border-bottom:1px solid var(--gray-lt);vertical-align:middle}
+.task-row{cursor:pointer;transition:background .1s}
+.task-row:hover td{background:var(--gray-lt)}
+.task-row.done-row td{opacity:.6}
+.task-row.done-row .task-name{text-decoration:line-through}
+.task-row.done-row td:first-child,.task-row.done-row td:nth-child(2){opacity:1}
+.task-row.hidden-filter{display:none}
+.detail-row{display:none}
+.detail-row.open{display:table-row}
+.status-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:.68rem;font-weight:700;transition:all .13s;white-space:nowrap}
+.status-btn:hover{filter:brightness(1.08);transform:scale(1.02)}
+.status-btn.s0{background:#F1F5F9;color:var(--s0)}
+.status-btn.s1{background:#EFF6FF;color:var(--s1)}
+.status-btn.s2{background:#F0FDF4;color:var(--s2)}
+.status-btn.s3{background:#FEF2F2;color:var(--s3)}
+.phase-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.63rem;font-weight:700;color:#fff;white-space:nowrap}
+.resp-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.61rem;font-weight:600;color:#fff;margin:1px;white-space:nowrap}
+.expand-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.72rem;padding:2px 4px;border-radius:3px;transition:all .1s}
+.expand-btn:hover{background:var(--gray-lt);color:var(--navy)}
+.expand-btn.open{color:var(--navy)}
+.detail-inner{padding:13px 16px 13px 36px;display:grid;grid-template-columns:1fr 1fr;gap:9px;background:var(--bg)}
+@media(max-width:600px){.detail-inner{grid-template-columns:1fr;padding-left:16px}}
+.det-block{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+.det-block h5{font-size:.62rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.det-block p{font-size:.74rem;line-height:1.6;color:var(--text-mid)}
+.notes-block{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+.notes-block h5{font-size:.62rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.notes-input{width:100%;border:1px solid var(--border);border-radius:5px;padding:7px 9px;font-size:.75rem;font-family:inherit;resize:vertical;min-height:52px;color:var(--text);background:var(--bg);transition:border .2s}
+.notes-input:focus{outline:none;border-color:var(--navy);background:#fff}
 .notes-input::placeholder{color:#B0BEC5}
-.notes-saved{font-size:.68rem;color:var(--p2);margin-top:2px;opacity:0;transition:opacity .3s}
+.notes-saved{font-size:.65rem;color:var(--s2);margin-top:2px;opacity:0;transition:opacity .3s}
 .notes-saved.show{opacity:1}
 
-/* CALENDAR */
-.cal-toggle{background:none;border:1px solid #CFD8DC;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:.74rem;color:var(--muted);margin-bottom:9px;transition:background .2s}
-.cal-toggle:hover{background:#EEF2F7}
-.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:3px;margin-bottom:16px}
+/* ── ALERTS ── */
+.alert-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+@media(max-width:600px){.alert-row{grid-template-columns:1fr}}
+.alert-card{border-radius:var(--r);padding:11px 13px;display:flex;gap:9px;align-items:flex-start}
+.alert-card.checkpoint{background:var(--yellow-lt);border:1.5px solid var(--yellow-bd)}
+.alert-card.buffer{background:#F0FDF4;border:1.5px solid #86EFAC}
+.alert-icon{font-size:1.15rem;flex-shrink:0}
+.alert-card h4{font-size:.76rem;font-weight:700;margin-bottom:2px}
+.alert-card.checkpoint h4{color:#92400E}
+.alert-card.buffer h4{color:#14532D}
+.alert-card p{font-size:.71rem;line-height:1.55;color:var(--text-mid)}
+
+/* ── CALENDAR ── */
+.cal-toggle-btn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 13px;cursor:pointer;font-size:.72rem;color:var(--text-muted);margin-bottom:9px;transition:background .13s}
+.cal-toggle-btn:hover{background:var(--gray-lt)}
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:3px;margin-bottom:16px}
 .cal-grid.hidden{display:none}
-.cal-cell{background:var(--card);border-radius:5px;padding:4px 7px;text-align:center;font-size:.68rem;box-shadow:0 1px 2px rgba(0,0,0,.05);position:relative}
-.cal-cell .dn{font-weight:700}
-.cal-cell .dt{color:var(--muted)}
-.cal-cell.today-d{background:#E3F2FD;border:1.5px solid var(--p1)}
-.cal-cell.today-d .dn{color:var(--p1)}
-.cal-cell.today-d::after{content:'오늘';position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--p1);color:#fff;font-size:.56rem;padding:1px 4px;border-radius:3px;font-weight:700;white-space:nowrap}
+.cal-cell{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:5px 7px;text-align:center;font-size:.65rem}
+.cal-cell .dn{font-weight:700;color:var(--navy)}
+.cal-cell .dt{color:var(--text-muted);font-size:.61rem}
+.cal-cell.today-d{background:var(--yellow-lt);border-color:var(--yellow)}
+.cal-cell.today-d .dn{color:var(--navy-dark)}
 
-/* SAVE TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:#1A2332;color:#fff;padding:10px 16px;border-radius:8px;font-size:.78rem;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy-dark);color:#fff;padding:10px 15px;border-radius:8px;font-size:.76rem;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(70px);opacity:0;transition:all .25s;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .toast.show{transform:translateY(0);opacity:1}
-.toast-dot{width:7px;height:7px;border-radius:50%;background:#4CAF50}
 
-footer{text-align:center;padding:18px;color:var(--muted);font-size:.7rem;border-top:1px solid #DDE3EA;margin-top:6px}
+footer{text-align:center;padding:16px;font-size:.68rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:4px}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>💊 약품 자동 분류 시스템 — 일정 &amp; 작업 트래커</h1>
-  <div class="sub">Automated Medication Dispensing &amp; Classification System</div>
-  <div class="meta-bar">
-    <div class="meta-chip">D1 <span>2026-05-20</span></div>
-    <div class="meta-chip">마감 <span>2026-06-29 (D28)</span></div>
-    <div class="meta-chip">28 작업일</div>
-    <div class="meta-chip">5/26 석가탄신일 휴무</div>
+<!-- ══ HEADER ══ -->
+<header class="site-header">
+  <div class="header-main">
+    <div class="hdr-icon">💊</div>
+    <div class="hdr-title">
+      <h1>약품 자동 분류 시스템</h1>
+      <p>Automated Medication Dispensing &amp; Classification System</p>
+    </div>
+    <div class="hdr-chips">
+      <div class="hdr-chip">D1 <b>2026-05-20</b></div>
+      <div class="hdr-chip">마감 <b>2026-06-29</b></div>
+      <div class="hdr-chip">5/26 석가탄신일 휴무</div>
+      <div class="sync-pill">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">초기화 중...</span>
+        <span id="lastUpdate"></span>
+      </div>
+    </div>
   </div>
-  <div class="sync-bar">
-    <div class="sync-dot" id="syncDot"></div>
-    <span id="syncText">초기화 중...</span>
-    <span id="lastUpdate"></span>
+  <div class="header-progress">
+    <div class="hpb-wrap"><div class="hpb-fill" id="hpbFill" style="width:0%"></div></div>
+    <div class="hpb-pct" id="hpbPct">0%</div>
+    <div class="hpb-counts">
+      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s0)"></div><span id="hc0">0</span> 미시작</div>
+      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s1)"></div><span id="hc1">0</span> 진행중</div>
+      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s2)"></div><span id="hc2">0</span> 완료</div>
+      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s3)"></div><span id="hc3">0</span> 지연</div>
+    </div>
   </div>
 </header>
 
-<!-- ══════════════════════════════════════════════
-     Firebase 설정 안내 (설정 완료 후 이 배너는 자동으로 숨겨집니다)
-     ══════════════════════════════════════════════ -->
-<div class="setup-banner" id="setupBanner">
-  <h4>🔧 Firebase 설정 필요 — 아래 가이드를 따라 <code>FIREBASE_CONFIG</code>를 채워주세요</h4>
-  <button class="setup-toggle" onclick="document.getElementById('setupSteps').classList.toggle('hidden')">설정 가이드 펼치기 / 접기</button>
-  <ol id="setupSteps" style="margin-top:10px">
-    <li><strong>Firebase 프로젝트 만들기</strong>: <code>console.firebase.google.com</code> → 새 프로젝트 생성</li>
-    <li><strong>Realtime Database 활성화</strong>: Build → Realtime Database → 데이터베이스 만들기 → 테스트 모드로 시작</li>
-    <li><strong>웹 앱 등록</strong>: 프로젝트 설정 → 앱 추가 → 웹(&lt;/&gt;) → 앱 닉네임 입력 → 등록</li>
-    <li><strong>설정값 복사</strong>: <code>firebaseConfig</code> 객체 전체 복사</li>
-    <li><strong>이 파일 수정</strong>: 아래 JS의 <code>FIREBASE_CONFIG</code>에 붙여넣기 후 저장</li>
-    <li><strong>GitHub Pages 배포</strong>: 이 파일을 <code>index.html</code>로 이름 변경 후 GitHub 저장소에 업로드 → Settings → Pages → Branch: main → Save</li>
-  </ol>
-</div>
-
-<div class="notice">
-  ⚠ <strong>공휴일:</strong> 5/26(화) 석가탄신일 팀 전체 휴무 (4번 RL 개인 착수 가능) &nbsp;|&nbsp; 6/6(토) 현충일 — 주말이므로 영향 없음
-</div>
-
 <div class="wrap">
 
-  <div class="section-title">작업 트래커</div>
-  <div class="tracker-top">
-    <div class="progress-card">
-      <h3>전체 진행률</h3>
-      <div class="progress-row">
-        <div class="pb-wrap"><div class="pb-fill" id="progressFill" style="width:0%"></div></div>
-        <div class="progress-pct" id="progressPct">0%</div>
-      </div>
-      <div style="font-size:.7rem;color:var(--muted);margin-bottom:9px" id="progressSub">완료 0 / 32 태스크</div>
-      <div class="status-counts">
-        <div class="sc-pill" style="color:var(--s0)" onclick="filterTable('s0')"><div class="sc-dot" style="background:var(--s0)"></div><span id="cnt0">0</span> 미시작</div>
-        <div class="sc-pill" style="color:var(--s1)" onclick="filterTable('s1')"><div class="sc-dot" style="background:var(--s1)"></div><span id="cnt1">0</span> 진행중</div>
-        <div class="sc-pill" style="color:var(--s2)" onclick="filterTable('s2')"><div class="sc-dot" style="background:var(--s2)"></div><span id="cnt2">0</span> 완료</div>
-        <div class="sc-pill" style="color:var(--s3)" onclick="filterTable('s3')"><div class="sc-dot" style="background:var(--s3)"></div><span id="cnt3">0</span> 지연</div>
-      </div>
+<!-- ══ HINT BANNER ══ -->
+<div class="hint-banner" id="hintBanner">
+  <div class="hint-icon">💡</div>
+  <div class="hint-body">
+    <h4>사용 방법</h4>
+    <ul>
+      <li><b>상태 버튼 클릭</b> → 미시작 → 진행중 → 완료 → 지연 순으로 전환, Firebase로 <b>팀원 전체 즉시 동기화</b></li>
+      <li><b>Gantt 차트</b>가 현재 일정 전체를 보여줍니다. 노란 선 = 오늘, 주황 선 = 체크포인트</li>
+      <li><b>태스크 행 클릭</b>으로 상세 정보·메모 확인. 메모는 팀 공유됩니다</li>
+      <li>상단 <b>통계 카드</b>를 클릭하면 해당 상태만 필터링됩니다</li>
+    </ul>
+  </div>
+  <button class="hint-close" onclick="document.getElementById('hintBanner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- ══ TODAY PANEL ══ -->
+<div class="today-panel">
+  <div class="today-dday-box">
+    <span class="today-badge" id="todayBadge">D?</span>
+    <div class="today-date-lbl" id="todayDateLbl">로딩 중</div>
+  </div>
+  <div class="today-tasks-col">
+    <h3>오늘의 태스크</h3>
+    <div id="todayTaskList"></div>
+  </div>
+  <div class="today-rem-col">
+    <h3>마감까지</h3>
+    <div class="rem-num" id="remNum">—</div>
+    <div class="rem-sub">작업일 남음</div>
+  </div>
+</div>
+
+<!-- ══ GANTT CHART (MAIN) ══ -->
+<div class="sec-hdr">
+  <div class="sec-accent"></div>
+  <div class="sec-label">Gantt 차트 — 전체 일정</div>
+  <div class="sec-line"></div>
+</div>
+<div class="gantt-section">
+  <div class="gantt-toolbar">
+    <span style="font-size:.72rem;color:var(--text-muted)">28 작업일 · D1=5/20 · D28=6/29</span>
+    <div class="gantt-legend">
+      <div class="gl-item"><div class="gl-bar" style="background:var(--p1)"></div>Phase 1</div>
+      <div class="gl-item"><div class="gl-bar" style="background:var(--p2)"></div>Phase 2</div>
+      <div class="gl-item"><div class="gl-bar" style="background:var(--p3)"></div>Phase 3</div>
+      <div class="gl-item"><div class="gl-bar" style="background:var(--p4)"></div>Phase 4</div>
+      <div class="gl-item"><div class="gl-bar" style="background:var(--p5)"></div>Phase 5</div>
+      <div class="gl-item"><div class="gl-bar" style="background:var(--rl)"></div>RL 트랙</div>
+      <div class="gl-item"><div class="gl-line-y"></div>오늘</div>
+      <div class="gl-item"><div class="gl-line-o"></div>체크포인트</div>
     </div>
-    <div class="today-card">
-      <h3>오늘의 태스크</h3>
-      <div class="today-dday" id="todayBadge">로딩 중...</div>
-      <div id="todayTasks"></div>
-      <div class="deadline-counter" id="deadlineCounter"></div>
+  </div>
+  <div class="gantt-scroll">
+    <div class="gantt-inner">
+      <div id="ganttDateRow" class="g-date-row"></div>
+      <div id="ganttBody"></div>
     </div>
   </div>
+</div>
 
-  <div class="stats">
-    <div class="stat-card"><div class="val">32</div><div class="lbl">전체 태스크</div></div>
-    <div class="stat-card"><div class="val">5 + RL</div><div class="lbl">개발 단계</div></div>
-    <div class="stat-card"><div class="val">D17 · D21</div><div class="lbl">RL 체크포인트</div></div>
-    <div class="stat-card"><div class="val">D26~D28</div><div class="lbl">안정화 버퍼 3일</div></div>
-    <div class="stat-card"><div class="val">6/1</div><div class="lbl">RL 본격 시작</div></div>
+<!-- ══ STATS ══ -->
+<div class="stat-row">
+  <div class="stat-card sc-all" onclick="filterTable('all')">
+    <div class="stat-val" id="scTotal">32</div>
+    <div class="stat-lbl">전체 태스크</div>
   </div>
-
-  <div class="section-title">단계별 개요</div>
-  <div class="phase-grid" id="phaseGrid"></div>
-
-  <div class="section-title">강화학습 체크포인트</div>
-  <div class="checkpoints">
-    <div class="checkpoint"><div style="font-size:1.2rem;flex-shrink:0">⚡</div><div>
-      <h4>1차 체크포인트 — D17 (6월 12일 금)</h4>
-      <p>열기 학습(D8~D16) 완료 다음 날 평가. 성공률 확인 및 닫기 학습 4일차 중간 점검.</p>
-    </div></div>
-    <div class="checkpoint"><div style="font-size:1.2rem;flex-shrink:0">⚡</div><div>
-      <h4>최종 Go/No-go — D21 (6월 18일 목)</h4>
-      <p>닫기 학습(D14~D20) 완료 다음 날 최종 평가. 메인 시연 통합 여부 확정. 마감 6일 전.</p>
-    </div></div>
+  <div class="stat-card sc-s0" onclick="filterTable('s0')">
+    <div class="stat-val" id="scS0">—</div>
+    <div class="stat-lbl">⬜ 미시작</div>
   </div>
-  <div class="buffer-box"><div style="font-size:1.2rem;flex-shrink:0">🔒</div><div>
-    <h4>안정화 버퍼 — D26~D28 (6/25~6/29, 3일)</h4>
+  <div class="stat-card sc-s1" onclick="filterTable('s1')">
+    <div class="stat-val" id="scS1">—</div>
+    <div class="stat-lbl">🔵 진행중</div>
+  </div>
+  <div class="stat-card sc-s2" onclick="filterTable('s2')">
+    <div class="stat-val" id="scS2">—</div>
+    <div class="stat-lbl">✅ 완료</div>
+  </div>
+  <div class="stat-card sc-s3" onclick="filterTable('s3')">
+    <div class="stat-val" id="scS3">—</div>
+    <div class="stat-lbl">⚠️ 지연</div>
+  </div>
+</div>
+
+<!-- ══ PHASE CARDS ══ -->
+<div class="sec-hdr">
+  <div class="sec-accent"></div>
+  <div class="sec-label">단계별 개요</div>
+  <div class="sec-line"></div>
+</div>
+<div class="phase-cards" id="phaseCards"></div>
+
+<!-- ══ CHECKPOINTS ══ -->
+<div class="sec-hdr">
+  <div class="sec-accent"></div>
+  <div class="sec-label">주요 이정표</div>
+  <div class="sec-line"></div>
+</div>
+<div class="alert-row">
+  <div class="alert-card checkpoint"><div class="alert-icon">⚡</div><div>
+    <h4>1차 체크포인트 — D17 (6/12 금)</h4>
+    <p>열기 학습 완료 다음 날 평가. 성공률 확인 및 닫기 학습 4일차 중간 점검.</p>
+  </div></div>
+  <div class="alert-card checkpoint"><div class="alert-icon">⚡</div><div>
+    <h4>최종 Go/No-go — D21 (6/18 목)</h4>
+    <p>닫기 학습 완료 다음 날 최종 평가. 메인 시연 통합 여부 확정. 마감 6일 전.</p>
+  </div></div>
+  <div class="alert-card buffer" style="grid-column:1/-1"><div class="alert-icon">🔒</div><div>
+    <h4>안정화 버퍼 — D26~D28 (6/25~6/29)</h4>
     <p>신규 기능 개발 절대 금지. 속도·좌표·흡착·카메라·PLC·대시보드 안정화만 진행. 시연 3회 이상 연속 성공 목표.</p>
   </div></div>
+</div>
 
-  <div class="section-title">Gantt 차트</div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--p1)"></div>Phase 1</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--p2)"></div>Phase 2</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--p3)"></div>Phase 3</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--p4)"></div>Phase 4</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--p5)"></div>Phase 5</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--rl)"></div>RL 트랙</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#FF9800;width:3px;border-radius:1px"></div>체크포인트</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#E53935;width:3px;border-radius:1px"></div>오늘</div>
-  </div>
-  <div class="gantt-wrap"><div class="gantt" id="gantt"></div></div>
+<!-- ══ TASK TABLE ══ -->
+<div class="sec-hdr">
+  <div class="sec-accent"></div>
+  <div class="sec-label">태스크 상세</div>
+  <div class="sec-line"></div>
+</div>
+<button class="cal-toggle-btn" onclick="toggleCal()">📅 작업일 ↔ 날짜 대응표 펼치기</button>
+<div class="cal-grid hidden" id="calGrid"></div>
 
-  <button class="cal-toggle" onclick="toggleCal()">📅 작업일 ↔ 날짜 대응표</button>
-  <div class="cal-grid hidden" id="calGrid"></div>
-
-  <div class="section-title">태스크 상세 계획</div>
-  <div class="filter-bar">
-    <button class="filter-btn" id="fAll"    onclick="filterTable('all')">전체</button>
-    <button class="filter-btn" id="fP1"     onclick="filterTable('p1')">Phase 1</button>
-    <button class="filter-btn" id="fP2"     onclick="filterTable('p2')">Phase 2</button>
-    <button class="filter-btn" id="fP3"     onclick="filterTable('p3')">Phase 3</button>
-    <button class="filter-btn" id="fP4"     onclick="filterTable('p4')">Phase 4</button>
-    <button class="filter-btn" id="fP5"     onclick="filterTable('p5')">Phase 5</button>
-    <button class="filter-btn" id="fRl"     onclick="filterTable('rl')">RL 트랙</button>
-    <div class="filter-sep"></div>
-    <button class="filter-btn" id="fS0"     onclick="filterTable('s0')">⬜ 미시작</button>
-    <button class="filter-btn" id="fS1"     onclick="filterTable('s1')">🔵 진행중</button>
-    <button class="filter-btn" id="fS2"     onclick="filterTable('s2')">✅ 완료</button>
-    <button class="filter-btn" id="fS3"     onclick="filterTable('s3')">⚠️ 지연</button>
-    <button class="filter-btn" id="fToday"  onclick="filterTable('today')">📌 오늘</button>
-    <button class="reset-btn"               onclick="resetTracker()">🗑 초기화</button>
+<div class="table-section">
+  <div class="table-toolbar">
+    <button class="f-btn" id="fAll"   onclick="filterTable('all')">전체</button>
+    <button class="f-btn" id="fP1"    onclick="filterTable('p1')">Phase 1</button>
+    <button class="f-btn" id="fP2"    onclick="filterTable('p2')">Phase 2</button>
+    <button class="f-btn" id="fP3"    onclick="filterTable('p3')">Phase 3</button>
+    <button class="f-btn" id="fP4"    onclick="filterTable('p4')">Phase 4</button>
+    <button class="f-btn" id="fP5"    onclick="filterTable('p5')">Phase 5</button>
+    <button class="f-btn" id="fRl"    onclick="filterTable('rl')">RL 트랙</button>
+    <div class="f-sep"></div>
+    <button class="f-btn" id="fS0"    onclick="filterTable('s0')">미시작</button>
+    <button class="f-btn" id="fS1"    onclick="filterTable('s1')">진행중</button>
+    <button class="f-btn" id="fS2"    onclick="filterTable('s2')">완료</button>
+    <button class="f-btn" id="fS3"    onclick="filterTable('s3')">지연</button>
+    <button class="f-btn" id="fToday" onclick="filterTable('today')">📌 오늘</button>
+    <button class="f-reset" onclick="resetTracker()">초기화</button>
   </div>
   <div style="overflow-x:auto">
   <table class="task-table">
     <thead><tr>
-      <th style="width:26px"></th>
-      <th style="width:32px">상태</th>
-      <th>단계</th>
-      <th>핵심 기능</th>
-      <th style="width:86px">D-day</th>
-      <th style="width:58px">시작</th>
-      <th style="width:58px">종료</th>
-      <th>주 담당</th>
+      <th style="width:24px"></th>
+      <th style="width:110px">상태</th>
+      <th style="width:110px">단계</th>
+      <th>태스크</th>
+      <th style="width:90px">기간</th>
+      <th style="width:56px">시작</th>
+      <th style="width:56px">종료</th>
+      <th>담당</th>
     </tr></thead>
     <tbody id="taskBody"></tbody>
   </table>
   </div>
 </div>
 
-<div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">저장됨</span></div>
+</div><!-- /wrap -->
 
-<footer>약품 자동 분류 시스템 · D1=2026-05-20 · D28=2026-06-29 · 28 작업일<br>Firebase 실시간 동기화 — 상태 변경 시 모든 팀원 화면에 즉시 반영</footer>
+<div class="toast" id="toast"><span id="toastMsg">저장됨</span></div>
+
+<footer>약품 자동 분류 시스템 · D1=2026-05-20 · D28=2026-06-29 · Firebase 실시간 동기화</footer>
 
 <script>
-/* ══════════════════════════════════════════
-   ★ Firebase 설정 — 여기에 본인 프로젝트 값을 붙여넣으세요
-   ══════════════════════════════════════════ */
+/* ══ Firebase 설정 ══ */
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyC7W_WRrd-X9QiCTqmG0dLMkolNyOzzajY",
   authDomain:        "meds-tracker-cec4b.firebaseapp.com",
@@ -340,415 +433,477 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "1006315783271",
   appId:             "1:1006315783271:web:fec55188a0622277d5c0c2"
 };
-/* ══════════════════════════════════════════ */
 
 const USE_FIREBASE = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 const LS_KEY = 'meds_tracker_v3';
 const FB_PATH = 'meds_tracker_v2';
 
-/* ─── 날짜 데이터 ─── */
-const DAY_DATES = {
-  1:'5/20(수)',2:'5/21(목)',3:'5/22(금)',4:'5/25(월)',5:'5/27(수)',6:'5/28(목)',7:'5/29(금)',
-  8:'6/1(월)',9:'6/2(화)',10:'6/3(수)',11:'6/4(목)',12:'6/5(금)',
-  13:'6/8(월)',14:'6/9(화)',15:'6/10(수)',16:'6/11(목)',17:'6/12(금)',
-  18:'6/15(월)',19:'6/16(화)',20:'6/17(수)',21:'6/18(목)',22:'6/19(금)',
-  23:'6/22(월)',24:'6/23(화)',25:'6/24(수)',26:'6/25(목)',27:'6/26(금)',28:'6/29(월)'
-};
-const MONTH_DATES={1:'5/20',2:'5/21',3:'5/22',4:'5/25',5:'5/27',6:'5/28',7:'5/29',8:'6/1',9:'6/2',10:'6/3',11:'6/4',12:'6/5',13:'6/8',14:'6/9',15:'6/10',16:'6/11',17:'6/12',18:'6/15',19:'6/16',20:'6/17',21:'6/18',22:'6/19',23:'6/22',24:'6/23',25:'6/24',26:'6/25',27:'6/26',28:'6/29'};
+/* ── 날짜 데이터 ── */
+const DAY_DATES  = {1:'5/20(수)',2:'5/21(목)',3:'5/22(금)',4:'5/25(월)',5:'5/27(수)',6:'5/28(목)',7:'5/29(금)',8:'6/1(월)',9:'6/2(화)',10:'6/3(수)',11:'6/4(목)',12:'6/5(금)',13:'6/8(월)',14:'6/9(화)',15:'6/10(수)',16:'6/11(목)',17:'6/12(금)',18:'6/15(월)',19:'6/16(화)',20:'6/17(수)',21:'6/18(목)',22:'6/19(금)',23:'6/22(월)',24:'6/23(화)',25:'6/24(수)',26:'6/25(목)',27:'6/26(금)',28:'6/29(월)'};
+const MONTH_DATES= {1:'5/20',2:'5/21',3:'5/22',4:'5/25',5:'5/27',6:'5/28',7:'5/29',8:'6/1',9:'6/2',10:'6/3',11:'6/4',12:'6/5',13:'6/8',14:'6/9',15:'6/10',16:'6/11',17:'6/12',18:'6/15',19:'6/16',20:'6/17',21:'6/18',22:'6/19',23:'6/22',24:'6/23',25:'6/24',26:'6/25',27:'6/26',28:'6/29'};
 const ACTUAL_DATES={1:[2026,5,20],2:[2026,5,21],3:[2026,5,22],4:[2026,5,25],5:[2026,5,27],6:[2026,5,28],7:[2026,5,29],8:[2026,6,1],9:[2026,6,2],10:[2026,6,3],11:[2026,6,4],12:[2026,6,5],13:[2026,6,8],14:[2026,6,9],15:[2026,6,10],16:[2026,6,11],17:[2026,6,12],18:[2026,6,15],19:[2026,6,16],20:[2026,6,17],21:[2026,6,18],22:[2026,6,19],23:[2026,6,22],24:[2026,6,23],25:[2026,6,24],26:[2026,6,25],27:[2026,6,26],28:[2026,6,29]};
 
-/* ─── 상수 ─── */
-const PC={1:'var(--p1)',2:'var(--p2)',3:'var(--p3)',4:'var(--p4)',5:'var(--p5)',rl:'var(--rl)'};
-const PL={1:'Phase 1 기초',2:'Phase 2 컴포넌트',3:'Phase 3 기능완성',4:'Phase 4 통합',5:'Phase 5 마무리',rl:'RL 트랙'};
-const RC={'1번 시스템 총괄':'var(--r1)','1번 시스템':'var(--r1)','2번 로봇팔':'var(--r2)','3번 비전':'var(--r3)','4번 강화학습':'var(--r4)','5번 하드웨어':'var(--r5)','전원':'var(--ra)'};
-const STATUSES=['미시작','진행중','완료','지연'];
-const SICONS=['⬜','🔵','✅','⚠️'];
-const SCLASS=['s0','s1','s2','s3'];
+/* ── 상수 ── */
+const PC  = {1:'var(--p1)',2:'var(--p2)',3:'var(--p3)',4:'var(--p4)',5:'var(--p5)',rl:'var(--rl)'};
+const PL  = {1:'Phase 1 기초',2:'Phase 2 컴포넌트',3:'Phase 3 기능완성',4:'Phase 4 통합',5:'Phase 5 마무리',rl:'RL 트랙'};
+const RC  = {'1번 시스템 총괄':'#1565C0','1번 시스템':'#1565C0','2번 로봇팔':'#1B5E20','3번 비전':'#BF360C','4번 강화학습':'#004D40','5번 하드웨어':'#37474F','전원':'#4A148C'};
+const STATUSES = ['미시작','진행중','완료','지연'];
+const SICONS   = ['⬜','🔵','✅','⚠️'];
+const SCLS     = ['s0','s1','s2','s3'];
+const SDOT_CLR = ['var(--s0)','var(--s1)','var(--s2)','var(--s3)'];
 
-/* ─── 태스크 데이터 ─── */
-const TASKS=[
-  {phase:1,name:'전체 시스템 구조 확정',ds:1,de:2,resp:['1번 시스템 총괄'],detail:'시나리오를 처방 입력→캐비닛 위치 확인→서랍 개폐→약품 피킹→검증→병동별 분류 박스 적재→최종 확인으로 확정. AMR 제외, 로봇팔 셀 내부 기능에 집중.',tech:'ROS2, Python, DB, 대시보드 구조 설계',done:'상태 흐름, 토픽, DB 구조, 하드웨어 연결 대상이 문서로 정리된다.',next:'팀원별 개발 범위와 인터페이스가 확정되어야 각 모듈 개발 시작 가능'},
-  {phase:1,name:'하드웨어 배치 설계',ds:1,de:3,resp:['5번 하드웨어'],detail:'로봇팔 작업 범위 안에 캐비닛, 검증 카메라, 병동별 분류 박스, 온습도 측정 위치, 전자석 부착 위치를 배치한다.',tech:'캐비닛, 수납 박스, 미끄럼방지 테이프, 카메라 거치대, 병동별 박스',done:'로봇팔 기준으로 캐비닛과 박스 위치가 고정되고 좌표 측정이 가능한 상태.',next:'로봇 좌표 설정과 캐비닛 물리 구성으로 진행 가능'},
-  {phase:1,name:'DB 기본 구조 구축',ds:2,de:4,resp:['1번 시스템 총괄'],detail:'처방 정보, 약품 정보, 캐비닛 칸 정보, 약품 크기, 병동별 분류 정보, 재고 수량, 작업 상태를 저장. 로봇 동작용 DB와 최종 검증용 DB를 분리.',tech:'SQLite 또는 MySQL, Flask 또는 FastAPI',done:'처방 입력 시 작업 ID가 생성되고 약품 목록과 캐비닛 칸 위치를 조회할 수 있다.',next:'대시보드와 task_manager_node가 같은 작업 ID를 사용할 수 있어야 함'},
-  {phase:1,name:'캐비닛 물리 구성',ds:3,de:6,resp:['5번 하드웨어'],detail:'층층이 서랍장에 칸 번호를 부여하고 약품 배치 규칙을 정한다. 칸막이와 미끄럼방지 패드로 약품 위치 오차를 줄인다.',tech:'서랍장, 칸막이, 미끄럼방지 테이프, 자석테이프, ArUco 또는 QR 라벨',done:'각 칸의 위치가 고정되고 약품이 흔들리지 않으며 로봇 접근이 가능한 상태.',next:'캐비닛 칸별 고정 좌표와 마커 매칭 작업으로 진행 가능'},
-  {phase:1,name:'대시보드 1차 구현',ds:3,de:7,resp:['1번 시스템 총괄'],detail:'처방 입력 화면, 작업 생성 버튼, 현재 작업 상태 화면, 오류 확인 화면 구현. 디자인보다 상태 확인을 우선한다.',tech:'Flask / FastAPI / React 중 선택',done:'화면에서 처방을 입력하면 DB에 작업이 생성되고 상태가 표시된다.',next:'처방 생성 버튼을 눌렀을 때 로봇 작업 목록이 만들어져야 함'},
-  {phase:'rl',name:'서랍 개폐 시뮬레이션 환경 구축',ds:5,de:7,resp:['4번 강화학습'],detail:'강화학습을 위해 시뮬레이션의 캐비닛, 서랍, 손잡이, 로봇팔, 그리퍼를 구현. ★ 5/26 석가탄신일 개인 착수, D5(5/27)부터 공식 시작.',tech:'Gazebo / Isaac Sim / PyBullet 중 선택, URDF, CAD 모델',done:'시뮬레이션에서 서랍 손잡이와 로봇팔이 충돌 없이 표현된다.',next:'강화학습 서랍 열기 학습 시작 가능 (D8, 6/1)'},
-  {phase:2,name:'약품 모델 및 크기 등록',ds:4,de:7,resp:['3번 비전','5번 하드웨어'],detail:'박스형 약품, 식염수통, 원기둥형 약통, 포장 주사기, 연고, 실링 조제약, 아이스팩 등 후보 물품의 가로·세로·높이를 측정해 DB에 입력.',tech:'자, 버니어캘리퍼스, DB',done:'약품별 크기, 피킹 가능 여부, 보관 칸 정보가 DB에 저장된다.',next:'피킹 가능 범위 판단과 적재 알고리즘 구현 가능'},
-  {phase:2,name:'로봇팔 기본 좌표 설정',ds:5,de:8,resp:['2번 로봇팔'],detail:'home pose, 캐비닛 접근 pose, 서랍 앞 pose, 검증 카메라 앞 pose, 병동별 박스 pose 설정. 초기 구현은 고정 좌표 기반.',tech:'ROS2, Doosan E0509, MoveJ, MoveL',done:'로봇팔이 각 기준 위치로 충돌 없이 이동한다.',next:'단일 약품 피킹과 병동 박스 적재 동작으로 진행 가능'},
-  {phase:2,name:'캐비닛 위치 확인 기능',ds:5,de:8,resp:['3번 비전'],detail:'캐비닛 각 칸에 코드 또는 마커를 붙이고 DB의 칸 번호와 매칭. 초기에는 고정 좌표 사용, 카메라 인식은 위치 검증용.',tech:'OpenCV, ArUco, QR, 카메라',done:'특정 약품 요청 시 해당 캐비닛 칸 번호와 로봇 목표 좌표가 반환된다.',next:'로봇팔이 잘못된 칸으로 이동하지 않도록 검증 가능'},
-  {phase:2,name:'PLC 기본 입출력 구성',ds:6,de:9,resp:['5번 하드웨어'],detail:'시작·정지 버튼, 사람 접근 감지 입력, 전자석 제어 출력, 상태등·경고등 구성. 로봇 연동 전 단독 테스트 먼저 수행.',tech:'PLC, 릴레이, 버튼, 접근 감지 센서, 전자석',done:'PLC 입력에 따라 전자석과 상태 출력이 안정적으로 동작한다.',next:'ROS2 또는 백엔드 연동을 위한 신호 정의 가능'},
-  {phase:2,name:'Arduino 온습도 측정',ds:6,de:9,resp:['5번 하드웨어'],detail:'DHT22로 캐비닛 주변 온도와 습도를 측정하고 Serial 통신으로 PC 또는 ROS2 노드에 전달.',tech:'Arduino, DHT22, Python Serial, ROS2 topic',done:'온도와 습도 값이 주기적으로 출력되고 DB 또는 대시보드에 표시된다.',next:'온습도 이상 상태를 시스템 오류 조건에 포함 가능'},
-  {phase:'rl',name:'강화학습 서랍 열기 학습',ds:8,de:16,resp:['4번 강화학습'],detail:'판단은 DB와 task manager가 하고 서랍 여는 동작만 학습. 보상: 손잡이 접근, 접촉 유지, 서랍 이동 거리, 과도한 힘 억제.',tech:'Stable-Baselines3, PPO 또는 SAC, 시뮬레이션 환경',done:'시뮬레이션에서 서랍을 일정 거리 이상 열 수 있다.',next:'성공률 낮으면 메인 시연과 분리 → 심화 결과로 발표'},
-  {phase:2,name:'그리퍼 및 흡착 구조 구성',ds:8,de:11,resp:['2번 로봇팔','5번 하드웨어'],detail:'흡착식 그리퍼 사용 시 흡착 패드 중심점을 TCP 기준으로 정의. 실제 흡착이 어렵다면 그리퍼 중간점 기준 하드코딩, 박스형 약품부터 집기.',tech:'흡착 그리퍼 또는 2-finger 그리퍼, 3D 프린팅 지그, 전자석',done:'박스형 약품 1개를 안정적으로 집을 수 있다.',next:'단일 약품 피킹 루틴 구현 가능'},
-  {phase:2,name:'단일 약품 피킹',ds:9,de:12,resp:['2번 로봇팔'],detail:'박스형 약품 1개를 대상으로 접근→집기→상승→검증 위치 이동→분류 박스 적재까지 단독 동작 구현.',tech:'ROS2, MoveJ, MoveL, gripper open/close',done:'박스형 약품 1개를 5회 중 4회 이상 성공적으로 이동.',next:'반복 피킹과 검증 기능을 연결할 수 있음'},
-  {phase:2,name:'약품 검증 1차 구현',ds:9,de:12,resp:['3번 비전'],detail:'로봇이 약품을 집은 뒤 카메라 앞에 가져오면 크기, 라벨, 색상, QR, OCR 중 가능한 요소를 확인. YOLO보다 특징 기반 검증 우선.',tech:'OpenCV, OCR, QR, 이미지 비교, 카메라',done:'집은 약품이 DB의 목표 약품과 맞는지 판정 가능.',next:'검증 실패 시 로봇 정지와 사용자 확인 요청으로 연결 가능'},
+/* ── 태스크 데이터 ── */
+const TASKS = [
+  {phase:1,name:'전체 시스템 구조 확정',ds:1,de:2,resp:['1번 시스템 총괄'],detail:'시나리오를 처방 입력→캐비닛 위치 확인→서랍 개폐→약품 피킹→검증→병동별 분류 박스 적재→최종 확인으로 확정.',tech:'ROS2, Python, DB, 대시보드 구조 설계',done:'상태 흐름, 토픽, DB 구조, 하드웨어 연결 대상이 문서로 정리됨.',next:'팀원별 개발 범위와 인터페이스 확정'},
+  {phase:1,name:'하드웨어 배치 설계',ds:1,de:3,resp:['5번 하드웨어'],detail:'로봇팔 작업 범위 안에 캐비닛, 검증 카메라, 병동별 분류 박스, 온습도 측정 위치, 전자석 부착 위치를 배치.',tech:'캐비닛, 수납 박스, 미끄럼방지 테이프, 카메라 거치대',done:'로봇팔 기준으로 캐비닛과 박스 위치 고정, 좌표 측정 가능 상태.',next:'로봇 좌표 설정과 캐비닛 물리 구성으로 진행'},
+  {phase:1,name:'DB 기본 구조 구축',ds:2,de:4,resp:['1번 시스템 총괄'],detail:'처방 정보, 약품 정보, 캐비닛 칸 정보, 약품 크기, 병동별 분류 정보, 재고 수량, 작업 상태를 저장.',tech:'SQLite 또는 MySQL, Flask 또는 FastAPI',done:'처방 입력 시 작업 ID 생성, 약품 목록과 캐비닛 칸 위치 조회 가능.',next:'대시보드와 task_manager_node가 같은 작업 ID 사용 가능해야 함'},
+  {phase:1,name:'캐비닛 물리 구성',ds:3,de:6,resp:['5번 하드웨어'],detail:'층층이 서랍장에 칸 번호를 부여하고 약품 배치 규칙 정의. 칸막이와 미끄럼방지 패드로 약품 위치 오차 최소화.',tech:'서랍장, 칸막이, 미끄럼방지 테이프, ArUco 또는 QR 라벨',done:'각 칸의 위치 고정, 약품이 흔들리지 않으며 로봇 접근 가능.',next:'캐비닛 칸별 고정 좌표와 마커 매칭'},
+  {phase:1,name:'대시보드 1차 구현',ds:3,de:7,resp:['1번 시스템 총괄'],detail:'처방 입력 화면, 작업 생성 버튼, 현재 작업 상태 화면, 오류 확인 화면 구현.',tech:'Flask / FastAPI / React 중 선택',done:'화면에서 처방 입력 시 DB에 작업 생성되고 상태 표시.',next:'처방 생성 버튼 시 로봇 작업 목록 생성'},
+  {phase:'rl',name:'서랍 개폐 시뮬레이션 환경 구축',ds:5,de:7,resp:['4번 강화학습'],detail:'강화학습을 위해 시뮬레이션의 캐비닛, 서랍, 손잡이, 로봇팔, 그리퍼를 구현. ★ 5/26 석가탄신일 개인 착수.',tech:'Gazebo / Isaac Sim / PyBullet, URDF, CAD 모델',done:'시뮬레이션에서 서랍 손잡이와 로봇팔이 충돌 없이 표현.',next:'강화학습 서랍 열기 학습 시작 가능 (D8)'},
+  {phase:2,name:'약품 모델 및 크기 등록',ds:4,de:7,resp:['3번 비전','5번 하드웨어'],detail:'박스형, 식염수통, 원기둥형, 포장 주사기, 연고, 실링 조제약 등 약품의 가로·세로·높이 측정 후 DB 입력.',tech:'버니어캘리퍼스, DB',done:'약품별 크기, 피킹 가능 여부, 보관 칸 정보가 DB에 저장.',next:'피킹 가능 범위 판단과 적재 알고리즘 구현'},
+  {phase:2,name:'로봇팔 기본 좌표 설정',ds:5,de:8,resp:['2번 로봇팔'],detail:'home pose, 캐비닛 접근 pose, 서랍 앞 pose, 검증 카메라 앞 pose, 병동별 박스 pose 설정.',tech:'ROS2, Doosan E0509, MoveJ, MoveL',done:'로봇팔이 각 기준 위치로 충돌 없이 이동.',next:'단일 약품 피킹과 병동 박스 적재 동작으로 진행'},
+  {phase:2,name:'캐비닛 위치 확인 기능',ds:5,de:8,resp:['3번 비전'],detail:'캐비닛 각 칸에 코드 또는 마커를 붙이고 DB의 칸 번호와 매칭. 초기에는 고정 좌표 사용.',tech:'OpenCV, ArUco, QR, 카메라',done:'특정 약품 요청 시 해당 캐비닛 칸 번호와 로봇 목표 좌표 반환.',next:'로봇팔이 잘못된 칸으로 이동하지 않도록 검증'},
+  {phase:2,name:'PLC 기본 입출력 구성',ds:6,de:9,resp:['5번 하드웨어'],detail:'시작·정지 버튼, 사람 접근 감지 입력, 전자석 제어 출력, 상태등·경고등 구성.',tech:'PLC, 릴레이, 버튼, 접근 감지 센서, 전자석',done:'PLC 입력에 따라 전자석과 상태 출력이 안정적으로 동작.',next:'ROS2 또는 백엔드 연동을 위한 신호 정의'},
+  {phase:2,name:'Arduino 온습도 측정',ds:6,de:9,resp:['5번 하드웨어'],detail:'DHT22로 캐비닛 주변 온도와 습도를 측정하고 Serial 통신으로 PC 또는 ROS2 노드에 전달.',tech:'Arduino, DHT22, Python Serial, ROS2 topic',done:'온도와 습도 값이 주기적으로 출력되고 대시보드에 표시.',next:'온습도 이상 상태를 시스템 오류 조건에 포함'},
+  {phase:'rl',name:'강화학습 서랍 열기 학습',ds:8,de:16,resp:['4번 강화학습'],detail:'판단은 DB와 task manager가 하고 서랍 여는 동작만 학습. 보상: 손잡이 접근, 접촉 유지, 서랍 이동 거리.',tech:'Stable-Baselines3, PPO 또는 SAC',done:'시뮬레이션에서 서랍을 일정 거리 이상 열 수 있음.',next:'성공률 낮으면 메인 시연과 분리 → 심화 결과로 발표'},
+  {phase:2,name:'그리퍼 및 흡착 구조 구성',ds:8,de:11,resp:['2번 로봇팔','5번 하드웨어'],detail:'흡착식 그리퍼 사용 시 흡착 패드 중심점을 TCP 기준으로 정의. 실제 흡착이 어렵다면 그리퍼 중간점 기준 하드코딩.',tech:'흡착 그리퍼 또는 2-finger 그리퍼, 3D 프린팅 지그, 전자석',done:'박스형 약품 1개를 안정적으로 집을 수 있음.',next:'단일 약품 피킹 루틴 구현'},
+  {phase:2,name:'단일 약품 피킹',ds:9,de:12,resp:['2번 로봇팔'],detail:'박스형 약품 1개를 대상으로 접근→집기→상승→검증 위치 이동→분류 박스 적재까지 단독 동작 구현.',tech:'ROS2, MoveJ, MoveL, gripper open/close',done:'박스형 약품 1개를 5회 중 4회 이상 성공적으로 이동.',next:'반복 피킹과 검증 기능 연결'},
+  {phase:2,name:'약품 검증 1차 구현',ds:9,de:12,resp:['3번 비전'],detail:'로봇이 약품을 집은 뒤 카메라 앞에 가져오면 크기, 라벨, 색상, QR, OCR 중 가능한 요소를 확인.',tech:'OpenCV, OCR, QR, 이미지 비교, 카메라',done:'집은 약품이 DB의 목표 약품과 맞는지 판정 가능.',next:'검증 실패 시 로봇 정지와 사용자 확인 요청으로 연결'},
   {phase:2,name:'재고 차감 로직 구현',ds:10,de:13,resp:['1번 시스템 총괄'],detail:'피킹 명령 시 로봇 작업 DB에서 예약 수량 감소, 검증 통과 후 실제 재고 DB에 반영. 2단계 재고 관리.',tech:'DB, Python, API',done:'검증 전 실제 재고 미확정 차감, 검증 통과 후 재고 반영.',next:'피킹 실패와 검증 실패 상황에서도 재고가 꼬이지 않아야 함'},
-  {phase:3,name:'반복 피킹 로직',ds:11,de:14,resp:['1번 시스템','2번 로봇팔'],detail:'처방에 약품이 여러 개 있을 때 약품 개수만큼 반복 동작. 캐비닛 칸 번호, 약품 개수, 피킹 순서를 DB에서 읽어 순차 실행.',tech:'ROS2 task manager, DB, Python',done:'약품 2개 이상을 순서대로 피킹하고 검증 위치까지 가져갈 수 있다.',next:'병동별 분류 박스 적재로 연결 가능'},
-  {phase:3,name:'약품 배치 가능 범위 판단',ds:11,de:14,resp:['1번 시스템','3번 비전'],detail:'약품 크기 기준으로 캐비닛 칸 안에 몇 열까지 배치 가능한지 계산. 정해진 범위를 벗어나는 약품은 피킹 불가 처리.',tech:'Python, DB, 크기 기반 규칙 알고리즘',done:'약품 크기에 따라 피킹 가능 여부가 자동 판단된다.',next:'애매한 크기 약품은 비전 확인 또는 수동 확인으로 넘김'},
-  {phase:3,name:'병동별 분류 박스 위치 설정',ds:12,de:14,resp:['2번 로봇팔','5번 하드웨어'],detail:'병동별로 색이 다른 박스를 배치하고 각 박스의 고정 좌표를 설정. 병동 정보에 따라 목표 적재 박스가 자동 선택.',tech:'병동별 박스, QR 또는 색상 라벨, 로봇 좌표',done:'작업의 병동 정보에 따라 목표 적재 박스가 자동 선택된다.',next:'약품 박스 적재 알고리즘과 로봇 적재 동작으로 진행 가능'},
-  {phase:3,name:'약품 박스 적재 알고리즘',ds:12,de:15,resp:['1번 시스템 총괄'],detail:'약품 폭과 높이 기준으로 분류 박스 내부 빈 공간 계산. 초기에는 1층 적재만, 여유 있으면 2층 적재로 확장.',tech:'Python, DB, 간단한 bin packing 규칙',done:'약품 크기에 따라 박스 안의 적재 위치가 결정된다.',next:'로봇팔이 계산된 좌표에 약품을 놓을 수 있어야 함'},
-  {phase:3,name:'검증 실패 예외 처리',ds:13,de:16,resp:['1번 시스템','3번 비전'],detail:'약품 개수·종류·OCR·QR·크기 검증이 DB와 다르면 로봇 정지, 대시보드에 사용자 검증 요청 표시. 사용자 확인 후 재시작 가능.',tech:'대시보드, DB 상태값, ROS2 status topic',done:'검증 실패 시 다음 피킹으로 넘어가지 않고 사용자 확인을 기다린다.',next:'안전성과 재시작 로직을 포함한 통합 테스트 가능'},
-  {phase:3,name:'PLC, Arduino, ROS2 연동',ds:13,de:16,resp:['5번 하드웨어','1번 시스템'],detail:'PLC의 정지 신호, 사람 접근 신호, 전자석 상태와 Arduino 온습도 데이터를 ROS2 또는 백엔드로 전달.',tech:'PLC, Arduino, Python Serial, Modbus, ROS2',done:'대시보드에서 온습도, 전자석 상태, 접근 감지 상태가 확인된다.',next:'오류 시나리오와 안전 정지 테스트 가능'},
-  {phase:'rl',name:'강화학습 서랍 닫기 학습',ds:14,de:20,resp:['4번 강화학습'],detail:'열린 서랍을 닫는 동작 학습. 실제 프로젝트 핵심 시연은 고정 좌표 기반 유지, 강화학습은 심화 기능으로 분리.',tech:'PPO 또는 SAC, 시뮬레이션',done:'시뮬레이션에서 서랍 닫기 성공률이 기준 이상 나온다.',next:'D21 체크포인트에서 메인 시연 통합 or 분리 시연 결정'},
-  {phase:3,name:'약품 적재 동작 구현',ds:14,de:17,resp:['2번 로봇팔'],detail:'검증 통과한 약품을 병동별 박스의 지정 위치에 놓는다. 적재 위치는 DB에서 계산된 좌표 사용.',tech:'ROS2, MoveL, 병동 박스 좌표, gripper 제어',done:'약품이 병동별 박스 안의 지정 위치에 놓인다.',next:'다중 약품 통합 테스트로 진행 가능'},
-  {phase:4,name:'전체 1차 통합',ds:16,de:20,resp:['전원'],detail:'처방 입력→로봇팔 피킹→검증→병동 박스 적재까지 하나의 작업 ID로 연결. 약품 1종, 병동 1개만 성공시키는 것 목표.',tech:'ROS2, DB, 대시보드, 로봇팔, 비전',done:'버튼 하나로 단일 약품 피킹과 적재가 끝까지 실행된다.',next:'다중 약품 통합으로 진행 가능'},
-  {phase:4,name:'다중 약품 통합',ds:20,de:22,resp:['전원'],detail:'약품 2~3종을 대상으로 캐비닛 칸 선택, 반복 피킹, 검증, 병동 박스 적재를 연결. 피킹 순서는 적재하기 쉬운 약품 우선.',tech:'DB 기반 작업 리스트, 로봇 반복 동작, 비전 검증',done:'약품 2~3종이 순서대로 피킹되고 같은 병동 박스에 적재된다.',next:'다중 병동 분류로 확장 가능'},
-  {phase:4,name:'다중 병동 분류',ds:21,de:23,resp:['1번 시스템','2번 로봇팔'],detail:'병동 정보에 따라 서로 다른 색상의 박스에 약품을 분류. 병동별 박스 위치를 DB에 저장하고 작업별 목적지 박스 자동 선택.',tech:'병동별 박스, DB, 로봇 좌표',done:'1병동, 2병동 등 병동별로 다른 박스에 적재 가능하다.',next:'최종 시연 흐름 확정 가능'},
-  {phase:4,name:'오류 시나리오 테스트',ds:22,de:25,resp:['전원'],detail:'잘못된 약품 검증, 약품 개수 불일치, 캐비닛 위치 불일치, 온습도 이상, 사람 접근 감지, 전자석 상태 오류 테스트.',tech:'대시보드 경고, PLC 입력, ROS2 상태값',done:'오류 발생 시 로봇이 멈추고 대시보드에 원인이 표시된다.',next:'최종 리허설 전 안전성과 복구 절차 확인'},
-  {phase:5,name:'최종 시연 흐름 고정',ds:23,de:25,resp:['전원'],detail:'발표용 시나리오를 하나로 고정. 예: 1병동 A 환자 약품 3개 피킹→검증→병동 박스 적재→완료 로그 저장.',tech:'전체 시스템',done:'시연용 작업 하나가 3회 이상 연속 성공한다.',next:'발표용 화면과 로그 정리로 진행 가능'},
-  {phase:'rl',name:'강화학습 결과 연결 또는 분리 시연',ds:23,de:25,resp:['4번 강화학습'],detail:'강화학습 결과가 안정적이면 메인에 제한적으로 연결. 불안정하면 시뮬레이션 결과를 심화 기능으로 별도 발표.',tech:'시뮬레이션 영상, 학습 결과 그래프, 실제 로봇 제한 테스트',done:'강화학습을 무리하게 메인 시연에 넣지 않고 성공 가능한 수준으로 발표 가능.',next:'메인 시연 안정성을 해치지 않는 선에서 포함 여부 결정'},
-  {phase:5,name:'발표용 로그 및 화면 정리',ds:25,de:26,resp:['1번 시스템 총괄'],detail:'대시보드에 현재 단계, 목표 약품, 검증 결과, 재고 차감, 온습도, 전자석 상태, 오류 메시지가 보이게 정리.',tech:'대시보드, DB log, 상태 타임라인',done:'발표자가 화면만 보고도 현재 동작을 설명할 수 있다.',next:'최종 리허설 가능'},
-  {phase:5,name:'최종 리허설 및 안정화 🔒',ds:26,de:28,resp:['전원'],detail:'로봇 속도, 좌표 오차, 흡착 실패, 약품 방향, 카메라 조명, PLC 신호, 대시보드 상태 지연을 수정. 예비 시나리오 준비. ★ 신규 기능 개발 절대 금지.',tech:'전체 하드웨어, 전체 소프트웨어',done:'최종 시연이 최소 3회 이상 안정적으로 성공한다.',next:'최종 발표 및 시연 준비 완료'},
+  {phase:3,name:'반복 피킹 로직',ds:11,de:14,resp:['1번 시스템','2번 로봇팔'],detail:'처방에 약품이 여러 개 있을 때 약품 개수만큼 반복 동작. DB에서 순차 실행.',tech:'ROS2 task manager, DB, Python',done:'약품 2개 이상을 순서대로 피킹하고 검증 위치까지 이동.',next:'병동별 분류 박스 적재로 연결'},
+  {phase:3,name:'약품 배치 가능 범위 판단',ds:11,de:14,resp:['1번 시스템','3번 비전'],detail:'약품 크기 기준으로 캐비닛 칸 안에 몇 열까지 배치 가능한지 계산.',tech:'Python, DB, 크기 기반 규칙 알고리즘',done:'약품 크기에 따라 피킹 가능 여부가 자동 판단.',next:'애매한 크기 약품은 비전 확인 또는 수동 확인으로 넘김'},
+  {phase:3,name:'병동별 분류 박스 위치 설정',ds:12,de:14,resp:['2번 로봇팔','5번 하드웨어'],detail:'병동별로 색이 다른 박스를 배치하고 각 박스의 고정 좌표를 설정.',tech:'병동별 박스, QR 또는 색상 라벨, 로봇 좌표',done:'작업의 병동 정보에 따라 목표 적재 박스가 자동 선택.',next:'약품 박스 적재 알고리즘과 로봇 적재 동작으로 진행'},
+  {phase:3,name:'약품 박스 적재 알고리즘',ds:12,de:15,resp:['1번 시스템 총괄'],detail:'약품 폭과 높이 기준으로 분류 박스 내부 빈 공간 계산. 초기에는 1층 적재만.',tech:'Python, DB, 간단한 bin packing 규칙',done:'약품 크기에 따라 박스 안의 적재 위치가 결정.',next:'로봇팔이 계산된 좌표에 약품을 놓을 수 있어야 함'},
+  {phase:3,name:'검증 실패 예외 처리',ds:13,de:16,resp:['1번 시스템','3번 비전'],detail:'약품 개수·종류·OCR·QR·크기 검증이 DB와 다르면 로봇 정지, 대시보드에 사용자 검증 요청 표시.',tech:'대시보드, DB 상태값, ROS2 status topic',done:'검증 실패 시 다음 피킹으로 넘어가지 않고 사용자 확인 대기.',next:'안전성과 재시작 로직을 포함한 통합 테스트'},
+  {phase:3,name:'PLC, Arduino, ROS2 연동',ds:13,de:16,resp:['5번 하드웨어','1번 시스템'],detail:'PLC의 정지 신호, 사람 접근 신호, 전자석 상태와 Arduino 온습도 데이터를 ROS2 또는 백엔드로 전달.',tech:'PLC, Arduino, Python Serial, Modbus, ROS2',done:'대시보드에서 온습도, 전자석 상태, 접근 감지 상태 확인 가능.',next:'오류 시나리오와 안전 정지 테스트'},
+  {phase:'rl',name:'강화학습 서랍 닫기 학습',ds:14,de:20,resp:['4번 강화학습'],detail:'열린 서랍을 닫는 동작 학습. 실제 프로젝트 핵심 시연은 고정 좌표 기반 유지.',tech:'PPO 또는 SAC, 시뮬레이션',done:'시뮬레이션에서 서랍 닫기 성공률이 기준 이상.',next:'D21 체크포인트에서 메인 시연 통합 or 분리 시연 결정'},
+  {phase:3,name:'약품 적재 동작 구현',ds:14,de:17,resp:['2번 로봇팔'],detail:'검증 통과한 약품을 병동별 박스의 지정 위치에 놓음. 적재 위치는 DB에서 계산된 좌표 사용.',tech:'ROS2, MoveL, 병동 박스 좌표, gripper 제어',done:'약품이 병동별 박스 안의 지정 위치에 놓임.',next:'다중 약품 통합 테스트로 진행'},
+  {phase:4,name:'전체 1차 통합',ds:16,de:20,resp:['전원'],detail:'처방 입력→로봇팔 피킹→검증→병동 박스 적재까지 하나의 작업 ID로 연결.',tech:'ROS2, DB, 대시보드, 로봇팔, 비전',done:'버튼 하나로 단일 약품 피킹과 적재가 끝까지 실행.',next:'다중 약품 통합으로 진행'},
+  {phase:4,name:'다중 약품 통합',ds:20,de:22,resp:['전원'],detail:'약품 2~3종을 대상으로 캐비닛 칸 선택, 반복 피킹, 검증, 병동 박스 적재를 연결.',tech:'DB 기반 작업 리스트, 로봇 반복 동작, 비전 검증',done:'약품 2~3종이 순서대로 피킹되고 같은 병동 박스에 적재.',next:'다중 병동 분류로 확장'},
+  {phase:4,name:'다중 병동 분류',ds:21,de:23,resp:['1번 시스템','2번 로봇팔'],detail:'병동 정보에 따라 서로 다른 색상의 박스에 약품을 분류.',tech:'병동별 박스, DB, 로봇 좌표',done:'1병동, 2병동 등 병동별로 다른 박스에 적재 가능.',next:'최종 시연 흐름 확정'},
+  {phase:4,name:'오류 시나리오 테스트',ds:22,de:25,resp:['전원'],detail:'잘못된 약품 검증, 약품 개수 불일치, 캐비닛 위치 불일치, 온습도 이상, 사람 접근 감지, 전자석 상태 오류 테스트.',tech:'대시보드 경고, PLC 입력, ROS2 상태값',done:'오류 발생 시 로봇이 멈추고 대시보드에 원인 표시.',next:'최종 리허설 전 안전성과 복구 절차 확인'},
+  {phase:5,name:'최종 시연 흐름 고정',ds:23,de:25,resp:['전원'],detail:'발표용 시나리오를 하나로 고정. 1병동 A 환자 약품 3개 피킹→검증→병동 박스 적재→완료 로그 저장.',tech:'전체 시스템',done:'시연용 작업 하나가 3회 이상 연속 성공.',next:'발표용 화면과 로그 정리로 진행'},
+  {phase:'rl',name:'강화학습 결과 연결 또는 분리 시연',ds:23,de:25,resp:['4번 강화학습'],detail:'강화학습 결과가 안정적이면 메인에 제한적으로 연결. 불안정하면 시뮬레이션 결과를 심화 기능으로 별도 발표.',tech:'시뮬레이션 영상, 학습 결과 그래프, 실제 로봇 제한 테스트',done:'강화학습을 무리하게 메인 시연에 넣지 않고 성공 가능한 수준으로 발표.',next:'메인 시연 안정성을 해치지 않는 선에서 포함 여부 결정'},
+  {phase:5,name:'발표용 로그 및 화면 정리',ds:25,de:26,resp:['1번 시스템 총괄'],detail:'대시보드에 현재 단계, 목표 약품, 검증 결과, 재고 차감, 온습도, 전자석 상태, 오류 메시지가 보이게 정리.',tech:'대시보드, DB log, 상태 타임라인',done:'발표자가 화면만 보고도 현재 동작을 설명할 수 있음.',next:'최종 리허설 가능'},
+  {phase:5,name:'최종 리허설 및 안정화',ds:26,de:28,resp:['전원'],detail:'로봇 속도, 좌표 오차, 흡착 실패, 약품 방향, 카메라 조명, PLC 신호, 대시보드 상태 지연 수정. ★ 신규 기능 절대 금지.',tech:'전체 하드웨어, 전체 소프트웨어',done:'최종 시연이 최소 3회 이상 안정적으로 성공.',next:'최종 발표 및 시연 준비 완료'},
 ];
 
-/* ─── 상태 ─── */
-let STATE={statuses:Array(TASKS.length).fill(0),notes:Array(TASKS.length).fill('')};
-let isBuilt=false;
-let stateRef=null;
+/* ── 상태 ── */
+let STATE = { statuses: Array(TASKS.length).fill(0), notes: Array(TASKS.length).fill('') };
+let isBuilt = false;
+let stateRef = null;
 
-/* ─── 오늘 D-day ─── */
-function getTodayD(){
-  const n=new Date(),y=n.getFullYear(),m=n.getMonth()+1,d=n.getDate();
-  for(let i=1;i<=28;i++){const[ay,am,ad]=ACTUAL_DATES[i];if(ay===y&&am===m&&ad===d)return i;}
-  if(y<2026||(y===2026&&m<5)||(y===2026&&m===5&&d<20))return 0;
+/* ── 오늘 D-day ── */
+function getTodayD() {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth()+1, d = n.getDate();
+  for (let i=1;i<=28;i++) { const [ay,am,ad]=ACTUAL_DATES[i]; if(ay===y&&am===m&&ad===d) return i; }
+  if (y<2026||(y===2026&&m<5)||(y===2026&&m===5&&d<20)) return 0;
   return 29;
 }
 
-/* ─── 토스트 ─── */
+/* ── 토스트 ── */
 let toastTimer;
-function showToast(msg='저장됨'){
-  const t=document.getElementById('toast');
-  document.getElementById('toastMsg').textContent=msg;
+function showToast(msg='저장됨') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2000);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
-/* ─── Firebase 초기화 ─── */
-function initApp(){
-  if(USE_FIREBASE){
-    document.getElementById('setupBanner').style.display='none';
-    const app=firebase.initializeApp(FIREBASE_CONFIG);
-    const db=firebase.database();
-    stateRef=db.ref(FB_PATH);
+/* ── Firebase 초기화 ── */
+function initApp() {
+  if (USE_FIREBASE) {
+    const app = firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    stateRef = db.ref(FB_PATH);
 
-    // 연결 상태 모니터링
-    db.ref('.info/connected').on('value',snap=>{
-      const ok=snap.val();
-      const dot=document.getElementById('syncDot');
-      dot.className='sync-dot '+(ok?'online':'offline');
-      document.getElementById('syncText').textContent=ok?'🟢 실시간 연결됨':'🔴 재연결 중...';
+    db.ref('.info/connected').on('value', snap => {
+      const ok = snap.val();
+      const dot = document.getElementById('syncDot');
+      dot.className = 'sync-dot ' + (ok ? 'online' : 'offline');
+      document.getElementById('syncText').textContent = ok ? '실시간 연결됨' : '재연결 중...';
     });
 
-    // 실시간 상태 수신
-    stateRef.on('value',snap=>{
-      const data=snap.val();
-      if(data&&Array.isArray(data.statuses)){
-        STATE.statuses=data.statuses;
-        STATE.notes=data.notes||Array(TASKS.length).fill('');
-        if(data.lastUpdated){
-          const d=new Date(data.lastUpdated);
-          document.getElementById('lastUpdate').textContent=
-            '업데이트: '+d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    stateRef.on('value', snap => {
+      const data = snap.val();
+      if (data && Array.isArray(data.statuses)) {
+        STATE.statuses = data.statuses;
+        STATE.notes = data.notes || Array(TASKS.length).fill('');
+        if (data.lastUpdated) {
+          const d = new Date(data.lastUpdated);
+          document.getElementById('lastUpdate').textContent =
+            ' · ' + d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
         }
       } else {
-        STATE.statuses=Array(TASKS.length).fill(0);
-        STATE.notes=Array(TASKS.length).fill('');
+        STATE.statuses = Array(TASKS.length).fill(0);
+        STATE.notes    = Array(TASKS.length).fill('');
         stateRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
       }
-      if(!isBuilt){buildAll();isBuilt=true;}
-      else{refreshUI();}
+      if (!isBuilt) { buildAll(); isBuilt = true; }
+      else { refreshUI(); }
     });
   } else {
-    // 로컬 모드 (Firebase 미설정)
-    const dot=document.getElementById('syncDot');
-    dot.className='sync-dot local';
-    document.getElementById('syncText').textContent='⚪ 로컬 모드 (Firebase 미설정)';
-    try{
-      const raw=localStorage.getItem(LS_KEY);
-      if(raw){const s=JSON.parse(raw);STATE.statuses=s.statuses||Array(TASKS.length).fill(0);STATE.notes=s.notes||Array(TASKS.length).fill('');}
-    }catch(e){}
-    buildAll();
-    isBuilt=true;
+    const dot = document.getElementById('syncDot');
+    dot.className = 'sync-dot local';
+    document.getElementById('syncText').textContent = '로컬 모드';
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) { const s=JSON.parse(raw); STATE.statuses=s.statuses||Array(TASKS.length).fill(0); STATE.notes=s.notes||Array(TASKS.length).fill(''); }
+    } catch(e) {}
+    buildAll(); isBuilt = true;
   }
 }
 
-/* ─── 저장 ─── */
-function saveState(){
-  if(USE_FIREBASE&&stateRef){
+/* ── 저장 ── */
+function saveState() {
+  if (USE_FIREBASE && stateRef) {
     stateRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
   } else {
-    localStorage.setItem(LS_KEY,JSON.stringify(STATE));
+    localStorage.setItem(LS_KEY, JSON.stringify(STATE));
     showToast('저장됨 (로컬)');
   }
 }
 
-/* ─── UI 새로고침 (Firebase에서 업데이트 수신 시) ─── */
-function refreshUI(){
-  updateStats();
+/* ── 전체 UI 새로고침 ── */
+function refreshUI() {
+  updateHeaderProgress();
   updateAllRowStatuses();
   updateNotesFromRemote();
-  const td=getTodayD();
-  buildTodayPanel(td);
-  document.getElementById('phaseGrid').innerHTML='';
+  buildTodayPanel(getTodayD());
   buildPhaseCards();
-  document.getElementById('gantt').innerHTML='';
+  buildGantt(getTodayD());
+}
+
+/* ── 전체 빌드 ── */
+function buildAll() {
+  const td = getTodayD();
+  buildGanttHeader(td);
   buildGantt(td);
-}
-
-function updateAllRowStatuses(){
-  TASKS.forEach((_,i)=>{
-    const s=STATE.statuses[i];
-    const tr=document.getElementById('tr'+i);if(!tr)return;
-    const btn=tr.querySelector('.status-btn');
-    if(btn){btn.className='status-btn '+SCLASS[s];btn.textContent=SICONS[s]+' '+STATUSES[s];}
-    if(s===2)tr.classList.add('done-row');else tr.classList.remove('done-row');
-  });
-  reapplyFilter();
-}
-
-function updateNotesFromRemote(){
-  TASKS.forEach((_,i)=>{
-    const ta=document.getElementById('note'+i);
-    if(!ta||document.activeElement===ta)return;
-    ta.value=STATE.notes[i]||'';
-  });
-}
-
-/* ─── 전체 빌드 ─── */
-function buildAll(){
-  const td=getTodayD();
-  buildCalendar(td);
-  buildPhaseCards();
   buildTodayPanel(td);
-  buildGantt(td);
   buildTable();
-  updateStats();
+  buildPhaseCards();
+  buildCalendar(td);
+  updateHeaderProgress();
   filterTable('all');
 }
 
-/* ─── 캘린더 ─── */
-function buildCalendar(td){
-  const cg=document.getElementById('calGrid');
-  for(let d=1;d<=28;d++){
-    const c=document.createElement('div');
-    c.className='cal-cell'+(d===td?' today-d':'');
-    c.innerHTML=`<div class="dn">D${d}</div><div class="dt">${DAY_DATES[d]}</div>`;
-    cg.appendChild(c);
+/* ── 헤더 진행률 ── */
+function updateHeaderProgress() {
+  const c = [0,0,0,0];
+  STATE.statuses.forEach(s=>c[s]++);
+  ['0','1','2','3'].forEach(i=>{ document.getElementById('hc'+i).textContent=c[i]; });
+  document.getElementById('scS0').textContent = c[0];
+  document.getElementById('scS1').textContent = c[1];
+  document.getElementById('scS2').textContent = c[2];
+  document.getElementById('scS3').textContent = c[3];
+  const pct = Math.round(c[2]/TASKS.length*100);
+  document.getElementById('hpbFill').style.width = pct+'%';
+  document.getElementById('hpbPct').textContent = pct+'%';
+}
+
+/* ── Today Panel ── */
+function buildTodayPanel(td) {
+  const badge   = document.getElementById('todayBadge');
+  const dateLbl = document.getElementById('todayDateLbl');
+  const list    = document.getElementById('todayTaskList');
+  const remNum  = document.getElementById('remNum');
+  if (td===0) {
+    badge.textContent='프로젝트 전'; dateLbl.textContent='D1: 5/20(수)';
+    list.innerHTML='<div style="font-size:.74rem;color:rgba(255,255,255,.5)">프로젝트 시작 전입니다</div>';
+    remNum.textContent='28'; return;
+  }
+  if (td>28) {
+    badge.textContent='완료'; dateLbl.textContent='6/29 마감';
+    list.innerHTML='<div style="font-size:.74rem;color:var(--yellow)">프로젝트가 완료되었습니다 🎉</div>';
+    remNum.textContent='0'; return;
+  }
+  badge.textContent = 'D'+td;
+  dateLbl.textContent = DAY_DATES[td];
+  const active = TASKS.filter(t=>t.ds<=td&&t.de>=td);
+  list.innerHTML = active.length
+    ? active.map(t=>{
+        const idx=TASKS.indexOf(t), s=STATE.statuses[idx];
+        return `<div class="today-task-item">
+          <div class="tphase-dot" style="background:${PC[t.phase]}"></div>
+          <span style="flex:1">${t.name}</span>
+          <span style="font-size:.66rem;opacity:.55">${SICONS[s]}</span>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:.74rem;color:rgba(255,255,255,.4)">오늘 해당 태스크 없음</div>';
+  remNum.textContent = Math.max(0,28-td);
+}
+
+/* ── Gantt Header (date row) ── */
+function buildGanttHeader(td) {
+  const row = document.getElementById('ganttDateRow');
+  row.innerHTML = '<div class="g-date-spacer"></div>';
+  for (let d=1;d<=28;d++) {
+    const md = MONTH_DATES[d];
+    const [m,day] = md.split('/');
+    const cell = document.createElement('div');
+    cell.className = 'g-date-cell' + (d===td?' today-col':'');
+    cell.innerHTML = `<div class="g-month">${m}/${day}</div>`;
+    row.appendChild(cell);
   }
 }
-function toggleCal(){document.getElementById('calGrid').classList.toggle('hidden')}
 
-/* ─── 페이즈 카드 ─── */
-function buildPhaseCards(){
-  const PM=[
-    {k:1,label:'Phase 1 · 기초 구축',dates:'D1~D7 · 5/20~5/29'},
-    {k:2,label:'Phase 2 · 컴포넌트 개발',dates:'D4~D13 · 5/25~6/8'},
-    {k:3,label:'Phase 3 · 기능 완성',dates:'D11~D17 · 6/4~6/12'},
-    {k:4,label:'Phase 4 · 통합 & 테스트',dates:'D16~D25 · 6/11~6/24'},
-    {k:5,label:'Phase 5 · 마무리 🔒',dates:'D23~D28 · 6/22~6/29'},
-    {k:'rl',label:'RL 독립 트랙 ⚡',dates:'5/26~D25 · 5/26~6/24'},
+/* ── Gantt Body ── */
+function buildGantt(td) {
+  const body = document.getElementById('ganttBody');
+  body.innerHTML = '';
+
+  const SECS = [
+    {label:'Phase 1 · 기초 구축',  idx:[0,1,2,3,4]},
+    {label:'RL 독립 트랙',         idx:[5,11,22,29]},
+    {label:'Phase 2 · 컴포넌트',   idx:[6,7,8,9,10,12,13,14,15]},
+    {label:'Phase 3 · 기능 완성',  idx:[16,17,18,19,20,21,23]},
+    {label:'Phase 4 · 통합 & 테스트', idx:[24,25,26,27]},
+    {label:'Phase 5 · 마무리',     idx:[28,30,31]},
   ];
-  const grid=document.getElementById('phaseGrid');
-  PM.forEach(pm=>{
-    const tasks=TASKS.filter(t=>t.phase===pm.k);
-    const done=tasks.filter(t=>STATE.statuses[TASKS.indexOf(t)]===2).length;
-    const pct=tasks.length?Math.round(done/tasks.length*100):0;
-    const card=document.createElement('div');
-    card.className='phase-card';card.style.borderTopColor=PC[pm.k];
-    card.innerHTML=`<h3 style="color:${PC[pm.k]}">${pm.label}</h3><div class="dates">${pm.dates}</div><div style="font-size:.7rem;color:var(--muted)">${done}/${tasks.length} 완료 (${pct}%)</div><div class="phase-mini-bar"><div class="phase-mini-fill" style="width:${pct}%;background:${PC[pm.k]}"></div></div>`;
-    grid.appendChild(card);
-  });
-}
 
-/* ─── 진행률 ─── */
-function updateStats(){
-  const c=[0,0,0,0];
-  STATE.statuses.forEach(s=>c[s]++);
-  ['0','1','2','3'].forEach(i=>document.getElementById('cnt'+i).textContent=c[i]);
-  const pct=Math.round(c[2]/TASKS.length*100);
-  document.getElementById('progressFill').style.width=pct+'%';
-  document.getElementById('progressPct').textContent=pct+'%';
-  document.getElementById('progressSub').textContent=`완료 ${c[2]} / ${TASKS.length} 태스크`;
-}
+  SECS.forEach(sec => {
+    /* section label row */
+    const secRow = document.createElement('div');
+    secRow.className = 'g-sec-row';
+    secRow.innerHTML = `<div class="g-sec-name">${sec.label}</div><div class="g-sec-line"></div>`;
+    body.appendChild(secRow);
 
-/* ─── 오늘 패널 ─── */
-function buildTodayPanel(td){
-  const badge=document.getElementById('todayBadge');
-  const panel=document.getElementById('todayTasks');
-  const counter=document.getElementById('deadlineCounter');
-  if(td===0){badge.textContent='프로젝트 시작 전';panel.innerHTML='<div style="font-size:.76rem;color:var(--muted);padding:4px 0">D1은 2026년 5월 20일입니다.</div>';counter.innerHTML='마감까지 <strong>28</strong> 작업일 남음';return;}
-  if(td>28){badge.textContent='프로젝트 종료';panel.innerHTML='<div style="font-size:.76rem;color:var(--p2);padding:4px 0">✅ 6월 29일 마감 완료</div>';counter.textContent='';return;}
-  badge.textContent=`D${td} · ${DAY_DATES[td]}`;
-  const active=TASKS.filter(t=>t.ds<=td&&t.de>=td);
-  if(!active.length){panel.innerHTML='<div style="font-size:.76rem;color:var(--muted);padding:4px 0">오늘 해당 태스크 없음</div>';}
-  else{panel.innerHTML=active.map(t=>{const idx=TASKS.indexOf(t);const s=STATE.statuses[idx];return`<div class="today-task-item"><span>${SICONS[s]}</span><span style="flex:1;font-size:.76rem">${t.name}</span><span style="font-size:.66rem;color:${PC[t.phase]}">D${t.ds}~D${t.de}</span></div>`;}).join('');}
-  const rem=Math.max(0,28-td);
-  counter.innerHTML=rem?`마감(6/29)까지 <strong>${rem}</strong> 작업일 남음`:'<strong style="color:var(--p2)">오늘이 마감일입니다!</strong>';
-}
+    sec.idx.forEach(ti => {
+      if (ti >= TASKS.length) return;
+      const t = TASKS[ti];
+      const isDone = STATE.statuses[ti] === 2;
+      const color  = PC[t.phase] || 'var(--rl)';
+      const sdot   = SDOT_CLR[STATE.statuses[ti]];
 
-/* ─── 간트 ─── */
-function buildGantt(td){
-  const gantt=document.getElementById('gantt');
-  let h=`<div class="gantt-header"><div class="gantt-label-head">태스크</div>`;
-  for(let d=1;d<=28;d++)h+=`<div class="gantt-day-num" title="${DAY_DATES[d]}">${MONTH_DATES[d]}</div>`;
-  h+='</div>';gantt.innerHTML=h;
-  const SECS=[
-    {label:'Phase 1 · 기초 구축',idx:[0,1,2,3,4]},
-    {label:'RL 독립 트랙',idx:[5,11,22,29]},
-    {label:'Phase 2 · 컴포넌트 개발',idx:[6,7,8,9,10,12,13,14,15]},
-    {label:'Phase 3 · 기능 완성',idx:[16,17,18,19,20,21,23]},
-    {label:'Phase 4 · 통합 & 테스트',idx:[24,25,26,27]},
-    {label:'Phase 5 · 마무리',idx:[28,30,31]},
-  ];
-  SECS.forEach(sec=>{
-    const sw=document.createElement('div');
-    sw.style.cssText='display:grid;grid-template-columns:175px repeat(28,1fr);margin-top:5px;margin-bottom:1px';
-    const sl=document.createElement('div');
-    sl.style.cssText='grid-column:1/-1;font-size:.6rem;font-weight:700;color:var(--muted);padding:2px 4px;border-top:1px dashed #E8EDF2;padding-top:5px;letter-spacing:.5px';
-    sl.textContent='── '+sec.label;sw.appendChild(sl);gantt.appendChild(sw);
-    sec.idx.forEach(ti=>{
-      if(ti>=TASKS.length)return;
-      const t=TASKS[ti];const isDone=STATE.statuses[ti]===2;
-      const row=document.createElement('div');row.className='gantt-row';
-      const nm=document.createElement('div');nm.className='gantt-name';nm.textContent=t.name;
-      if(isDone)nm.style.cssText='text-decoration:line-through;opacity:.45;font-size:.68px;padding:0 5px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+      const row = document.createElement('div');
+      row.className = 'g-row';
+
+      /* task name */
+      const nm = document.createElement('div');
+      nm.className = 'g-name' + (isDone?' done-name':'');
+      nm.innerHTML = `<div class="g-sdot" style="background:${sdot}"></div>${t.name}`;
+      nm.title = t.name;
       row.appendChild(nm);
-      for(let d=1;d<=28;d++){
-        const cell=document.createElement('div');cell.className='gantt-bar-cell';
-        if(d>=t.ds&&d<=t.de){
-          const bar=document.createElement('div');
-          bar.className='gantt-bar'+(isDone?' done-bar':'');
-          bar.style.background=PC[t.phase]||'var(--rl)';
-          if(d===t.ds)bar.style.borderRadius=t.ds===t.de?'2px':'2px 0 0 2px';
-          else if(d===t.de)bar.style.borderRadius='0 2px 2px 0';
-          else bar.style.borderRadius='0';
+
+      /* day cells */
+      for (let d=1;d<=28;d++) {
+        const cell = document.createElement('div');
+        cell.className = 'g-cell' + (d===td?' today-bg':'');
+
+        const inRange = d>=t.ds && d<=t.de;
+        if (inRange) {
+          const bar = document.createElement('div');
+          let cls = 'g-bar';
+          if (t.ds===t.de)        cls += ' bar-only';
+          else if (d===t.ds)      cls += ' bar-s';
+          else if (d===t.de)      cls += ' bar-e';
+          else                    cls += ' bar-m';
+          if (isDone) cls += ' done-bar';
+          bar.className = cls;
+          bar.style.background = color;
           cell.appendChild(bar);
-        } else {const bg=document.createElement('div');bg.className='gantt-milestone';cell.appendChild(bg);}
-        if(d===17||d===21){const cp=document.createElement('div');cp.className='gantt-cp';cp.title=d===17?'⚡ 1차 체크포인트':'⚡ Go/No-go';cell.appendChild(cp);}
-        if(d===td){const tl=document.createElement('div');tl.className='gantt-today-line';tl.title='오늘';cell.appendChild(tl);}
+        }
+
+        if (d===td) {
+          const tl = document.createElement('div'); tl.className='g-today-line'; cell.appendChild(tl);
+        }
+        if (d===17||d===21) {
+          const cp = document.createElement('div'); cp.className='g-cp-line'; cell.appendChild(cp);
+        }
         row.appendChild(cell);
       }
-      gantt.appendChild(row);
+      body.appendChild(row);
     });
   });
 }
 
-/* ─── 상태 토글 ─── */
-function cycleStatus(idx,e){
-  e.stopPropagation();
-  STATE.statuses[idx]=(STATE.statuses[idx]+1)%4;
-  renderRow(idx);
-  updateStats();
-  buildTodayPanel(getTodayD());
-  saveState();
-  if(USE_FIREBASE)showToast('팀원들에게 동기화 중...');
-  document.getElementById('gantt').innerHTML='';buildGantt(getTodayD());
-}
-function renderRow(idx){
-  const s=STATE.statuses[idx];
-  const tr=document.getElementById('tr'+idx);if(!tr)return;
-  const btn=tr.querySelector('.status-btn');
-  if(btn){btn.className='status-btn '+SCLASS[s];btn.textContent=SICONS[s]+' '+STATUSES[s];}
-  if(s===2)tr.classList.add('done-row');else tr.classList.remove('done-row');
-}
-
-/* ─── 메모 ─── */
-let noteTimers={};
-function onNoteChange(idx,val){
-  STATE.notes[idx]=val;
-  clearTimeout(noteTimers[idx]);
-  noteTimers[idx]=setTimeout(()=>{
-    saveState();
-    const saved=document.getElementById('ns'+idx);
-    if(saved){saved.classList.add('show');setTimeout(()=>saved.classList.remove('show'),1500);}
-    if(USE_FIREBASE)showToast('메모 저장됨');
-  },800);
+/* ── Phase Cards ── */
+function buildPhaseCards() {
+  const PM = [
+    {k:1,   label:'Phase 1 · 기초 구축',      dates:'D1~D7 · 5/20~5/29'},
+    {k:2,   label:'Phase 2 · 컴포넌트 개발',  dates:'D4~D13 · 5/25~6/8'},
+    {k:3,   label:'Phase 3 · 기능 완성',      dates:'D11~D17 · 6/4~6/12'},
+    {k:4,   label:'Phase 4 · 통합 & 테스트',  dates:'D16~D25 · 6/11~6/24'},
+    {k:5,   label:'Phase 5 · 마무리',         dates:'D23~D28 · 6/22~6/29'},
+    {k:'rl',label:'RL 독립 트랙',             dates:'5/26~D25'},
+  ];
+  const container = document.getElementById('phaseCards');
+  container.innerHTML = '';
+  PM.forEach(pm => {
+    const tasks = TASKS.filter(t=>t.phase===pm.k);
+    const done  = tasks.filter(t=>STATE.statuses[TASKS.indexOf(t)]===2).length;
+    const pct   = tasks.length ? Math.round(done/tasks.length*100) : 0;
+    const color = PC[pm.k];
+    const card  = document.createElement('div');
+    card.className = 'phase-card';
+    card.style.borderLeftColor = color;
+    card.innerHTML = `
+      <h4 style="color:${color}">${pm.label}</h4>
+      <div class="pc-dates">${pm.dates}</div>
+      <div class="pc-prog-text">${done}/${tasks.length} 완료 · ${pct}%</div>
+      <div class="pc-bar"><div class="pc-fill" style="width:${pct}%;background:${color}"></div></div>`;
+    container.appendChild(card);
+  });
 }
 
-/* ─── 테이블 빌드 ─── */
-function buildTable(){
-  const tbody=document.getElementById('taskBody');
-  TASKS.forEach((t,i)=>{
-    const s=STATE.statuses[i];
-    const color=PC[t.phase]||'var(--rl)';
-    const rb=t.resp.map(r=>`<span class="resp-badge" style="background:${RC[r]||'#607D8B'}">${r}</span>`).join('');
-    const tr=document.createElement('tr');
-    tr.className='task-row';tr.id='tr'+i;
-    tr.style.borderLeft=`3px solid ${color}`;
-    if(s===2)tr.classList.add('done-row');
-    tr.onclick=()=>toggleDetail(i);
-    tr.innerHTML=`
+/* ── Calendar ── */
+function buildCalendar(td) {
+  const cg = document.getElementById('calGrid');
+  for (let d=1;d<=28;d++) {
+    const c = document.createElement('div');
+    c.className = 'cal-cell'+(d===td?' today-d':'');
+    c.innerHTML = `<div class="dn">D${d}</div><div class="dt">${DAY_DATES[d]}</div>`;
+    cg.appendChild(c);
+  }
+}
+function toggleCal() { document.getElementById('calGrid').classList.toggle('hidden'); }
+
+/* ── Task Table ── */
+function buildTable() {
+  const tbody = document.getElementById('taskBody');
+  TASKS.forEach((t,i) => {
+    const s     = STATE.statuses[i];
+    const color = PC[t.phase] || 'var(--rl)';
+    const rb    = t.resp.map(r=>`<span class="resp-badge" style="background:${RC[r]||'#607D8B'}">${r}</span>`).join('');
+    const tr    = document.createElement('tr');
+    tr.className='task-row'; tr.id='tr'+i;
+    tr.style.borderLeft = '3px solid '+color;
+    if (s===2) tr.classList.add('done-row');
+    tr.onclick = ()=>toggleDetail(i);
+    tr.innerHTML = `
       <td><button class="expand-btn" id="btn${i}" onclick="event.stopPropagation();toggleDetail(${i})">▶</button></td>
-      <td><button class="status-btn ${SCLASS[s]}" onclick="cycleStatus(${i},event)">${SICONS[s]} ${STATUSES[s]}</button></td>
+      <td><button class="status-btn ${SCLS[s]}" onclick="cycleStatus(${i},event)">${SICONS[s]} ${STATUSES[s]}</button></td>
       <td><span class="phase-badge" style="background:${color}">${PL[t.phase]}</span></td>
-      <td class="task-name-cell" style="font-weight:600">${t.name}</td>
-      <td style="font-size:.73rem;font-weight:700">D${t.ds}~D${t.de}</td>
-      <td style="font-size:.72rem;color:var(--muted)">${MONTH_DATES[t.ds]}</td>
-      <td style="font-size:.72rem;color:var(--muted)">${MONTH_DATES[t.de]}</td>
+      <td class="task-name" style="font-weight:600">${t.name}</td>
+      <td style="font-size:.71rem;font-weight:700;white-space:nowrap">D${t.ds}–D${t.de}</td>
+      <td style="font-size:.7rem;color:var(--text-muted)">${MONTH_DATES[t.ds]}</td>
+      <td style="font-size:.7rem;color:var(--text-muted)">${MONTH_DATES[t.de]}</td>
       <td>${rb}</td>`;
     tbody.appendChild(tr);
-    const dtr=document.createElement('tr');
-    dtr.className='detail-row hidden';dtr.id='detail'+i;
-    dtr.innerHTML=`<td colspan="8"><div class="detail-inner">
-      <div class="det-block"><h5>세부 구현 내용</h5><p>${t.detail}</p></div>
-      <div class="det-block"><h5>기술 및 하드웨어</h5><p>${t.tech}</p></div>
+
+    const dtr = document.createElement('tr');
+    dtr.className='detail-row'; dtr.id='detail'+i;
+    dtr.innerHTML = `<td colspan="8"><div class="detail-inner">
+      <div class="det-block"><h5>세부 구현</h5><p>${t.detail}</p></div>
+      <div class="det-block"><h5>기술 / 하드웨어</h5><p>${t.tech}</p></div>
       <div class="det-block"><h5>완료 기준</h5><p>${t.done}</p></div>
-      <div class="det-block"><h5>다음 단계 진입 기준</h5><p>${t.next}</p></div>
-      <div class="notes-block"><h5>📝 메모 (자동 저장${USE_FIREBASE?' · 팀 공유':''})</h5>
-        <textarea class="notes-input" id="note${i}" placeholder="진행 상황, 이슈, 링크 등을 자유롭게 입력하세요..."
+      <div class="det-block"><h5>다음 단계 진입 조건</h5><p>${t.next}</p></div>
+      <div class="notes-block"><h5>📝 팀 메모 (자동 저장 · 공유)</h5>
+        <textarea class="notes-input" id="note${i}" placeholder="진행 상황, 이슈, 링크 등을 자유롭게 입력..."
           oninput="onNoteChange(${i},this.value)">${STATE.notes[i]||''}</textarea>
         <div class="notes-saved" id="ns${i}">✓ 저장됨</div>
-      </div>
-    </div></td>`;
+      </div></div></td>`;
     tbody.appendChild(dtr);
   });
 }
 
-function toggleDetail(i){
-  const d=document.getElementById('detail'+i),b=document.getElementById('btn'+i);
-  const h=d.classList.toggle('hidden');
-  b.textContent=h?'▶':'▼';b.classList.toggle('open',!h);
+/* ── Status cycle ── */
+function cycleStatus(idx, e) {
+  e.stopPropagation();
+  STATE.statuses[idx] = (STATE.statuses[idx]+1)%4;
+  renderRow(idx);
+  updateHeaderProgress();
+  buildTodayPanel(getTodayD());
+  buildPhaseCards();
+  buildGantt(getTodayD());
+  saveState();
+  if (USE_FIREBASE) showToast('팀원들에게 동기화 중...');
+}
+function renderRow(idx) {
+  const s  = STATE.statuses[idx];
+  const tr = document.getElementById('tr'+idx); if(!tr)return;
+  const btn = tr.querySelector('.status-btn');
+  if (btn) { btn.className='status-btn '+SCLS[s]; btn.textContent=SICONS[s]+' '+STATUSES[s]; }
+  if (s===2) tr.classList.add('done-row'); else tr.classList.remove('done-row');
 }
 
-/* ─── 필터 ─── */
-let curFilter='all';
-const BTN_MAP={all:'fAll',p1:'fP1',p2:'fP2',p3:'fP3',p4:'fP4',p5:'fP5',rl:'fRl',s0:'fS0',s1:'fS1',s2:'fS2',s3:'fS3',today:'fToday'};
-const BTN_COLORS={all:'#1A2332',p1:'var(--p1)',p2:'var(--p2)',p3:'var(--p3)',p4:'var(--p4)',p5:'var(--p5)',rl:'var(--rl)',s0:'var(--s0)',s1:'var(--s1)',s2:'var(--s2)',s3:'var(--s3)',today:'var(--p4)'};
-
-function filterTable(f){
-  curFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.color='';b.style.borderColor='';});
-  const btn=document.getElementById(BTN_MAP[f]);
-  if(btn){btn.classList.add('active');btn.style.background=BTN_COLORS[f]||'#1A2332';btn.style.color='#fff';btn.style.borderColor='transparent';}
-  const td=getTodayD();
-  document.querySelectorAll('.task-row').forEach((tr,i)=>{
-    const t=TASKS[i],s=STATE.statuses[i];
-    let show=true;
-    if(f==='all')show=true;
-    else if(f==='p1')show=t.phase===1;else if(f==='p2')show=t.phase===2;
-    else if(f==='p3')show=t.phase===3;else if(f==='p4')show=t.phase===4;
-    else if(f==='p5')show=t.phase===5;else if(f==='rl')show=t.phase==='rl';
-    else if(f==='s0')show=s===0;else if(f==='s1')show=s===1;
-    else if(f==='s2')show=s===2;else if(f==='s3')show=s===3;
-    else if(f==='today')show=td>0&&td<=28&&t.ds<=td&&t.de>=td;
-    tr.classList.toggle('hidden-filter',!show);
-    const dtr=document.getElementById('detail'+i);
-    if(dtr&&!show)dtr.classList.add('hidden');
+/* ── Remote update ── */
+function updateAllRowStatuses() {
+  TASKS.forEach((_,i) => {
+    const s  = STATE.statuses[i];
+    const tr = document.getElementById('tr'+i); if(!tr)return;
+    const btn = tr.querySelector('.status-btn');
+    if (btn) { btn.className='status-btn '+SCLS[s]; btn.textContent=SICONS[s]+' '+STATUSES[s]; }
+    if (s===2) tr.classList.add('done-row'); else tr.classList.remove('done-row');
+  });
+  reapplyFilter();
+}
+function updateNotesFromRemote() {
+  TASKS.forEach((_,i) => {
+    const ta = document.getElementById('note'+i);
+    if (!ta || document.activeElement===ta) return;
+    ta.value = STATE.notes[i]||'';
   });
 }
-function reapplyFilter(){filterTable(curFilter);}
 
-/* ─── 초기화 ─── */
-function resetTracker(){
-  if(!confirm('모든 팀원의 상태와 메모가 초기화됩니다.\n정말 진행하시겠습니까?'))return;
-  STATE.statuses=Array(TASKS.length).fill(0);
-  STATE.notes=Array(TASKS.length).fill('');
+/* ── Notes ── */
+let noteTimers = {};
+function onNoteChange(idx, val) {
+  STATE.notes[idx] = val;
+  clearTimeout(noteTimers[idx]);
+  noteTimers[idx] = setTimeout(()=>{
+    saveState();
+    const saved = document.getElementById('ns'+idx);
+    if (saved) { saved.classList.add('show'); setTimeout(()=>saved.classList.remove('show'),1500); }
+    if (USE_FIREBASE) showToast('메모 저장됨');
+  }, 800);
+}
+
+/* ── Toggle detail ── */
+function toggleDetail(i) {
+  const d = document.getElementById('detail'+i), b = document.getElementById('btn'+i);
+  const isOpen = d.classList.toggle('open');
+  b.textContent = isOpen?'▼':'▶'; b.classList.toggle('open',isOpen);
+}
+
+/* ── Filter ── */
+let curFilter = 'all';
+const FMAP = {all:'fAll',p1:'fP1',p2:'fP2',p3:'fP3',p4:'fP4',p5:'fP5',rl:'fRl',s0:'fS0',s1:'fS1',s2:'fS2',s3:'fS3',today:'fToday'};
+
+function filterTable(f) {
+  curFilter = f;
+  document.querySelectorAll('.f-btn').forEach(b=>{b.classList.remove('active');});
+  document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active'));
+  const btn = document.getElementById(FMAP[f]);
+  if (btn) btn.classList.add('active');
+  /* highlight stat card */
+  const scMap = {all:'.sc-all',s0:'.sc-s0',s1:'.sc-s1',s2:'.sc-s2',s3:'.sc-s3'};
+  if (scMap[f]) document.querySelector(scMap[f])?.classList.add('active');
+
+  const td = getTodayD();
+  document.querySelectorAll('.task-row').forEach((tr,i) => {
+    const t = TASKS[i], s = STATE.statuses[i];
+    let show = true;
+    if      (f==='all')   show=true;
+    else if (f==='p1')    show=t.phase===1;
+    else if (f==='p2')    show=t.phase===2;
+    else if (f==='p3')    show=t.phase===3;
+    else if (f==='p4')    show=t.phase===4;
+    else if (f==='p5')    show=t.phase===5;
+    else if (f==='rl')    show=t.phase==='rl';
+    else if (f==='s0')    show=s===0;
+    else if (f==='s1')    show=s===1;
+    else if (f==='s2')    show=s===2;
+    else if (f==='s3')    show=s===3;
+    else if (f==='today') show=td>0&&td<=28&&t.ds<=td&&t.de>=td;
+    tr.classList.toggle('hidden-filter',!show);
+    const dtr=document.getElementById('detail'+i);
+    if (dtr&&!show) dtr.classList.remove('open');
+  });
+}
+function reapplyFilter() { filterTable(curFilter); }
+
+/* ── Reset ── */
+function resetTracker() {
+  if (!confirm('모든 팀원의 상태와 메모가 초기화됩니다.\n정말 진행하시겠습니까?')) return;
+  STATE.statuses = Array(TASKS.length).fill(0);
+  STATE.notes    = Array(TASKS.length).fill('');
   saveState();
   location.reload();
 }
 
-/* ─── 시작 ─── */
+/* ── Start ── */
 initApp();
 </script>
 </body>
