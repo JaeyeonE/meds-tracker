@@ -8,451 +8,408 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root {
-  --navy:       #1E3A5F;
-  --navy-dark:  #0D1B2A;
-  --navy-mid:   #2C4A7C;
-  --yellow:     #FFD600;
-  --yellow-lt:  #FFF8E1;
-  --yellow-bd:  #FDE68A;
-  --bg:         #F2F4F8;
-  --card:       #FFFFFF;
-  --border:     #DDE3EC;
-  --gray-lt:    #EEF1F7;
-  --text:       #1A2332;
-  --text-mid:   #3D4E63;
-  --text-muted: #6B7A8D;
-  --s0: #94A3B8;
-  --s1: #3B82F6;
-  --s2: #22C55E;
-  --s3: #EF4444;
-  --p1: #3B82F6; --p2: #22C55E; --p3: #F59E0B;
-  --p4: #8B5CF6; --p5: #EF4444; --rl: #14B8A6;
-  --r: 8px;
+  --navy:      #0E1E35;
+  --navy2:     #162C4A;
+  --navy3:     #1E3A60;
+  --bg:        #F4F6FA;
+  --card:      #FFFFFF;
+  --border:    #DDE4EF;
+  --border-lt: #EEF2F8;
+  --text:      #0E1E35;
+  --text2:     #3A506B;
+  --muted:     #7C8FA8;
+  --s0:#9BA8BA; --s1:#2D7DD2; --s2:#27AE60; --s3:#E74C3C;
+  --p1:#2D7DD2; --p2:#27AE60; --p3:#E67E22;
+  --p4:#8E44AD; --p5:#E74C3C; --rl:#16A085;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,'Apple SD Gothic Neo',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body{font-family:-apple-system,'Segoe UI','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
 
-/* ── HEADER ── */
-.site-header{background:var(--navy-dark);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
-.header-main{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid rgba(255,255,255,.07)}
-.hdr-icon{width:34px;height:34px;background:var(--yellow);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.hdr-title h1{font-size:.95rem;font-weight:700;color:#fff;line-height:1.2}
-.hdr-title p{font-size:.68rem;color:rgba(255,255,255,.45);margin-top:1px}
-.hdr-chips{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.hdr-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:5px;padding:3px 9px;font-size:.69rem;color:rgba(255,255,255,.6)}
-.hdr-chip b{color:var(--yellow)}
-.sync-pill{display:flex;align-items:center;gap:5px;font-size:.69rem;color:rgba(255,255,255,.55);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 10px}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:#94A3B8;flex-shrink:0;transition:background .3s}
-.sync-dot.online{background:#22C55E;box-shadow:0 0 5px #22C55E99}
-.sync-dot.offline{background:#EF4444}
-.sync-dot.local{background:#F59E0B}
-.header-progress{padding:7px 22px;display:flex;align-items:center;gap:12px}
-.hpb-wrap{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
-.hpb-fill{height:100%;background:var(--yellow);border-radius:2px;transition:width .5s ease}
-.hpb-pct{font-size:.75rem;font-weight:800;color:var(--yellow);min-width:34px}
-.hpb-counts{display:flex;gap:10px}
-.hpb-c{font-size:.67rem;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:3px}
-.hpb-cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-#lastUpdate{font-size:.65rem;color:rgba(255,255,255,.3)}
+/* ─── HEADER ─── */
+.hdr{background:var(--navy);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.06)}
+.hdr-inner{display:flex;align-items:center;gap:16px;padding:13px 24px}
+.hdr-mark{font-size:1.25rem;line-height:1}
+.hdr-info h1{font-size:.95rem;font-weight:600;color:#fff;letter-spacing:-.2px}
+.hdr-info p{font-size:.68rem;color:rgba(255,255,255,.38);margin-top:1px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:20px}
+.hdr-deadline{text-align:right}
+.hdr-deadline .dl{font-size:.68rem;color:rgba(255,255,255,.38)}
+.hdr-deadline .dt{font-size:.82rem;font-weight:600;color:rgba(255,255,255,.85)}
+.hdr-sync{display:flex;align-items:center;gap:6px;font-size:.7rem;color:rgba(255,255,255,.38)}
+.sdot{width:6px;height:6px;border-radius:50%;background:#556;flex-shrink:0;transition:background .3s}
+.sdot.on{background:#27AE60;box-shadow:0 0 4px #27AE6066}
+.sdot.off{background:#E74C3C}
+.sdot.local{background:#E67E22}
 
-/* ── LAYOUT ── */
-.wrap{max-width:1520px;margin:0 auto;padding:18px 18px}
-.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:11px}
-.sec-accent{display:inline-block;width:3px;height:13px;background:var(--yellow);border-radius:2px;flex-shrink:0}
-.sec-label{font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+/* progress strip */
+.hdr-prog{background:rgba(255,255,255,.05);padding:7px 24px;display:flex;align-items:center;gap:14px;border-top:1px solid rgba(255,255,255,.05)}
+.prog-bar-wrap{flex:1;height:2px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden}
+.prog-bar-fill{height:100%;background:#fff;border-radius:1px;transition:width .5s}
+.prog-pct{font-size:.75rem;font-weight:700;color:rgba(255,255,255,.9);min-width:32px}
+.prog-counts{display:flex;gap:14px}
+.prog-c{font-size:.67rem;color:rgba(255,255,255,.38);display:flex;align-items:center;gap:4px}
+.prog-cdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+#lastUpd{font-size:.64rem;color:rgba(255,255,255,.22)}
+
+/* ─── LAYOUT ─── */
+.page{max-width:1540px;margin:0 auto;padding:22px 22px}
+
+/* ─── TODAY BAR ─── */
+.today-bar{background:var(--navy2);border-radius:6px;padding:18px 24px;margin-bottom:22px;display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap}
+.td-dday{flex-shrink:0;min-width:72px}
+.td-num{font-size:2.8rem;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px}
+.td-sub{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.3px}
+.td-divider{width:1px;background:rgba(255,255,255,.1);align-self:stretch;flex-shrink:0}
+.td-tasks{flex:1;min-width:180px}
+.td-tasks-label{font-size:.67rem;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.td-task{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;color:rgba(255,255,255,.8)}
+.td-task:last-child{border-bottom:none}
+.td-phase-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.td-task-st{font-size:.62rem;color:rgba(255,255,255,.32);margin-left:auto;white-space:nowrap}
+.td-rem{flex-shrink:0;text-align:right}
+.td-rem-num{font-size:2.4rem;font-weight:800;color:rgba(255,255,255,.9);line-height:1;letter-spacing:-2px}
+.td-rem-sub{font-size:.7rem;color:rgba(255,255,255,.35);margin-top:3px}
+
+/* ─── SECTION LABEL ─── */
+.sec{display:flex;align-items:center;gap:10px;margin:24px 0 12px}
+.sec-bar{width:3px;height:14px;background:var(--navy3);border-radius:2px;flex-shrink:0}
+.sec-txt{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
 .sec-line{flex:1;height:1px;background:var(--border)}
 
-/* ── HINT BANNER ── */
-.hint-banner{background:var(--yellow-lt);border:1.5px solid var(--yellow-bd);border-radius:var(--r);padding:13px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start}
-.hint-banner.hidden{display:none}
-.hint-icon{font-size:1.3rem;flex-shrink:0;line-height:1}
-.hint-body h4{font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:5px}
-.hint-body ul{font-size:.74rem;color:var(--text-mid);line-height:1.85;padding-left:16px}
-.hint-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 4px;flex-shrink:0;line-height:1}
-
-/* ── TODAY PANEL ── */
-.today-panel{background:var(--navy);border-radius:var(--r);padding:16px 20px;margin-bottom:18px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
-.today-dday-box{flex-shrink:0;min-width:80px;text-align:center}
-.today-badge{background:var(--yellow);color:var(--navy-dark);font-size:1.45rem;font-weight:800;padding:5px 16px;border-radius:7px;display:block;line-height:1.3}
-.today-date-lbl{font-size:.67rem;color:rgba(255,255,255,.45);margin-top:4px}
-.today-tasks-col{flex:1;min-width:200px}
-.today-tasks-col h3{font-size:.69rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
-.today-task-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.77rem;color:rgba(255,255,255,.82)}
-.today-task-item:last-child{border-bottom:none}
-.tphase-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.today-rem-col{flex-shrink:0;min-width:110px;text-align:center}
-.today-rem-col h3{font-size:.69rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.rem-num{font-size:2.2rem;font-weight:800;color:var(--yellow);line-height:1}
-.rem-sub{font-size:.69rem;color:rgba(255,255,255,.4);margin-top:2px}
-
-/* ── GANTT ── */
-.gantt-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:18px;overflow:hidden}
-.gantt-toolbar{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--gray-lt);flex-wrap:wrap}
-.gantt-legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto}
-.gl-item{display:flex;align-items:center;gap:4px;font-size:.67rem;color:var(--text-muted)}
-.gl-bar{width:14px;height:7px;border-radius:2px}
-.gl-line-y{width:10px;height:2px;background:var(--yellow);border-radius:1px}
-.gl-line-o{width:10px;height:2px;background:#F59E0B;border-radius:1px}
+/* ─── GANTT ─── */
+.gantt-wrap{background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:22px;overflow:hidden}
+.gantt-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border-lt);gap:12px;flex-wrap:wrap}
+.gantt-head-left{font-size:.72rem;color:var(--muted)}
+.gantt-legend{display:flex;gap:14px;flex-wrap:wrap}
+.gl{display:flex;align-items:center;gap:4px;font-size:.67rem;color:var(--muted)}
+.gl-b{width:14px;height:6px;border-radius:2px}
+.gl-ln{width:10px;height:2px;border-radius:1px}
 .gantt-scroll{overflow-x:auto}
-.gantt-inner{min-width:940px;padding:0 14px 12px}
+.gantt-inner{min-width:920px;padding:0 14px 14px}
 
 /* date header */
-.g-date-row{display:grid;grid-template-columns:188px repeat(28,1fr);padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:3px}
-.g-date-spacer{}
-.g-date-cell{text-align:center;font-size:.58rem;color:var(--text-muted);line-height:1.3}
-.g-date-cell.today-col .g-month{color:var(--navy);font-weight:700}
-.g-date-cell.today-col .g-day{color:var(--navy)}
-.g-month{font-weight:600;font-size:.6rem}
-.g-day{color:var(--text-muted);font-size:.56rem}
+.g-drow{display:grid;grid-template-columns:192px repeat(28,1fr);padding:10px 0 5px;position:sticky;top:0;background:var(--card);z-index:5;border-bottom:1px solid var(--border-lt);margin-bottom:4px}
+.g-dspace{}
+.g-dcell{text-align:center;font-size:.57rem;color:var(--muted);line-height:1.4}
+.g-dcell.g-today .g-dm{color:var(--navy);font-weight:700}
+.g-dm{font-size:.59rem;font-weight:500}
+.g-dd{font-size:.54rem;color:var(--muted)}
 
-/* section rows */
-.g-sec-row{display:grid;grid-template-columns:188px 1fr;margin:10px 0 2px}
-.g-sec-name{font-size:.63rem;font-weight:700;color:var(--text-muted);display:flex;align-items:center;gap:5px;padding:2px 0}
-.g-sec-name::before{content:'';width:10px;height:1px;background:var(--border);display:inline-block}
-.g-sec-line{height:1px;background:var(--border);margin-top:9px}
+/* section header */
+.g-shdr{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:10px 0 4px}
+.g-shdr-txt{font-size:.65rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.g-shdr-line{flex:1;height:1px;background:var(--border-lt)}
 
 /* task row */
-.g-row{display:grid;grid-template-columns:188px repeat(28,1fr);align-items:center;min-height:27px;border-radius:4px;margin-bottom:1px}
-.g-row:hover{background:var(--gray-lt)}
-.g-name{font-size:.69rem;color:var(--text-mid);padding:0 8px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
-.g-name.done-name{opacity:.4;text-decoration:line-through}
+.g-trow{display:grid;grid-template-columns:192px repeat(28,1fr);align-items:center;min-height:26px;margin-bottom:1px;border-radius:3px}
+.g-trow:hover{background:var(--bg)}
+.g-tname{font-size:.7rem;color:var(--text2);padding:0 10px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.g-tname.dn{opacity:.38;text-decoration:line-through}
 .g-sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.g-cell{height:27px;position:relative;display:flex;align-items:center}
-.g-cell.today-bg{background:rgba(255,214,0,.07)}
-.g-bar{position:absolute;left:1px;right:1px;height:13px;border-radius:3px;opacity:.88}
-.g-bar.done-bar{opacity:.25}
-.g-bar.bar-s{left:2px;right:1px;border-radius:3px 0 0 3px}
-.g-bar.bar-m{left:0;right:0;border-radius:0}
-.g-bar.bar-e{left:0;right:2px;border-radius:0 3px 3px 0}
-.g-bar.bar-only{left:2px;right:2px;border-radius:3px}
-.g-today-line{position:absolute;top:2px;bottom:2px;width:2px;background:var(--yellow);left:50%;transform:translateX(-50%);z-index:3;border-radius:1px}
-.g-cp-line{position:absolute;top:2px;bottom:2px;width:2px;background:#F59E0B;left:50%;transform:translateX(-50%);z-index:2;border-radius:1px}
-.g-bg-stripe{position:absolute;inset:0;background:rgba(255,214,0,.06)}
+.g-cell{height:26px;position:relative}
+.g-cell.t-bg{background:rgba(14,30,53,.04)}
+.g-bar{position:absolute;top:50%;transform:translateY(-50%);height:12px;opacity:.82}
+.g-bar.full{left:2px;right:2px;border-radius:3px}
+.g-bar.bs{left:2px;right:0;border-radius:3px 0 0 3px}
+.g-bar.bm{left:0;right:0;border-radius:0}
+.g-bar.be{left:0;right:2px;border-radius:0 3px 3px 0}
+.g-bar.dn{opacity:.22}
+.g-today{position:absolute;top:2px;bottom:2px;width:2px;background:#fff;left:50%;transform:translateX(-50%);z-index:4;border-radius:1px;box-shadow:0 0 0 1px rgba(14,30,53,.15)}
+.g-cp{position:absolute;top:2px;bottom:2px;width:1px;background:#E67E22;left:50%;transform:translateX(-50%);z-index:3;border-radius:1px}
 
-/* ── STAT CARDS ── */
-.stat-row{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
-.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 15px;flex:1;min-width:108px;cursor:pointer;transition:border-color .15s,box-shadow .15s;user-select:none}
-.stat-card:hover{border-color:var(--navy-mid)}
-.stat-card.active{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.1)}
-.stat-val{font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:3px}
-.stat-lbl{font-size:.68rem;color:var(--text-muted);font-weight:500}
-.sc-all .stat-val{color:var(--navy)}
-.sc-s0  .stat-val{color:var(--s0)}
-.sc-s1  .stat-val{color:var(--s1)}
-.sc-s2  .stat-val{color:var(--s2)}
-.sc-s3  .stat-val{color:var(--s3)}
+/* ─── STATS ─── */
+.stats-row{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 16px;flex:1;min-width:100px;cursor:pointer;transition:border-color .12s,box-shadow .12s;user-select:none;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.all::before{background:var(--navy)}
+.stat-card.s0::before{background:var(--s0)}
+.stat-card.s1::before{background:var(--s1)}
+.stat-card.s2::before{background:var(--s2)}
+.stat-card.s3::before{background:var(--s3)}
+.stat-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(14,30,53,.08)}
+.stat-card.active{border-color:var(--navy);box-shadow:0 0 0 2px rgba(14,30,53,.12)}
+.sv{font-size:1.6rem;font-weight:800;line-height:1;margin-bottom:3px}
+.sl{font-size:.67rem;color:var(--muted)}
+.all .sv{color:var(--navy)}
+.s0 .sv{color:var(--s0)}
+.s1 .sv{color:var(--s1)}
+.s2 .sv{color:var(--s2)}
+.s3 .sv{color:var(--s3)}
 
-/* ── PHASE CARDS ── */
-.phase-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;margin-bottom:18px}
-.phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;border-left:4px solid}
-.phase-card h4{font-size:.76rem;font-weight:700;margin-bottom:2px}
-.pc-dates{font-size:.65rem;color:var(--text-muted);margin-bottom:5px}
-.pc-prog-text{font-size:.68rem;color:var(--text-muted);margin-bottom:4px}
-.pc-bar{height:4px;background:var(--gray-lt);border-radius:2px;overflow:hidden}
+/* ─── PHASE CARDS ─── */
+.phase-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:22px}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;border-left:3px solid}
+.pc h4{font-size:.76rem;font-weight:600;margin-bottom:2px}
+.pc .pcd{font-size:.64rem;color:var(--muted);margin-bottom:6px}
+.pc .pcp{font-size:.67rem;color:var(--muted);margin-bottom:5px}
+.pc-bar{height:3px;background:var(--border-lt);border-radius:2px;overflow:hidden}
 .pc-fill{height:100%;border-radius:2px;transition:width .4s}
 
-/* ── TABLE ── */
-.table-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
-.table-toolbar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--gray-lt);flex-wrap:wrap}
-.f-btn{padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:.7rem;color:var(--text-muted);font-weight:600;transition:all .13s;white-space:nowrap}
-.f-btn:hover{background:var(--bg)}
-.f-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-.f-sep{width:1px;height:16px;background:var(--border);flex-shrink:0}
-.f-reset{margin-left:auto;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:.69rem;color:var(--text-muted);transition:all .13s}
-.f-reset:hover{background:#FEE2E2;color:#EF4444;border-color:#EF4444}
-.task-table{width:100%;border-collapse:collapse}
-.task-table th{background:var(--navy-dark);color:rgba(255,255,255,.65);padding:9px 12px;font-size:.68rem;font-weight:600;text-align:left;white-space:nowrap}
-.task-table td{padding:9px 12px;border-bottom:1px solid var(--gray-lt);vertical-align:middle}
-.task-row{cursor:pointer;transition:background .1s}
-.task-row:hover td{background:var(--gray-lt)}
-.task-row.done-row td{opacity:.6}
-.task-row.done-row .task-name{text-decoration:line-through}
-.task-row.done-row td:first-child,.task-row.done-row td:nth-child(2){opacity:1}
-.task-row.hidden-filter{display:none}
-.detail-row{display:none}
-.detail-row.open{display:table-row}
-.status-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:.68rem;font-weight:700;transition:all .13s;white-space:nowrap}
-.status-btn:hover{filter:brightness(1.08);transform:scale(1.02)}
-.status-btn.s0{background:#F1F5F9;color:var(--s0)}
-.status-btn.s1{background:#EFF6FF;color:var(--s1)}
-.status-btn.s2{background:#F0FDF4;color:var(--s2)}
-.status-btn.s3{background:#FEF2F2;color:var(--s3)}
-.phase-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.63rem;font-weight:700;color:#fff;white-space:nowrap}
-.resp-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.61rem;font-weight:600;color:#fff;margin:1px;white-space:nowrap}
-.expand-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.72rem;padding:2px 4px;border-radius:3px;transition:all .1s}
-.expand-btn:hover{background:var(--gray-lt);color:var(--navy)}
-.expand-btn.open{color:var(--navy)}
-.detail-inner{padding:13px 16px 13px 36px;display:grid;grid-template-columns:1fr 1fr;gap:9px;background:var(--bg)}
-@media(max-width:600px){.detail-inner{grid-template-columns:1fr;padding-left:16px}}
-.det-block{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
-.det-block h5{font-size:.62rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.det-block p{font-size:.74rem;line-height:1.6;color:var(--text-mid)}
-.notes-block{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
-.notes-block h5{font-size:.62rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.notes-input{width:100%;border:1px solid var(--border);border-radius:5px;padding:7px 9px;font-size:.75rem;font-family:inherit;resize:vertical;min-height:52px;color:var(--text);background:var(--bg);transition:border .2s}
-.notes-input:focus{outline:none;border-color:var(--navy);background:#fff}
-.notes-input::placeholder{color:#B0BEC5}
-.notes-saved{font-size:.65rem;color:var(--s2);margin-top:2px;opacity:0;transition:opacity .3s}
-.notes-saved.show{opacity:1}
+/* ─── ALERTS ─── */
+.alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+@media(max-width:600px){.alert-grid{grid-template-columns:1fr}}
+.alc{border-radius:6px;padding:11px 14px;display:flex;gap:10px}
+.alc.cp{background:#FFFBEB;border:1px solid #FDE68A}
+.alc.buf{background:#F0FDF4;border:1px solid #BBF7D0}
+.alc.buf2{grid-column:1/-1;background:#EFF6FF;border:1px solid #BFDBFE}
+.alc-icon{font-size:1.1rem;flex-shrink:0;line-height:1.3}
+.alc h4{font-size:.75rem;font-weight:600;margin-bottom:2px}
+.alc.cp h4{color:#78350F}
+.alc.buf h4{color:#14532D}
+.alc.buf2 h4{color:#1E3A8A}
+.alc p{font-size:.71rem;color:var(--text2);line-height:1.55}
 
-/* ── ALERTS ── */
-.alert-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
-@media(max-width:600px){.alert-row{grid-template-columns:1fr}}
-.alert-card{border-radius:var(--r);padding:11px 13px;display:flex;gap:9px;align-items:flex-start}
-.alert-card.checkpoint{background:var(--yellow-lt);border:1.5px solid var(--yellow-bd)}
-.alert-card.buffer{background:#F0FDF4;border:1.5px solid #86EFAC}
-.alert-icon{font-size:1.15rem;flex-shrink:0}
-.alert-card h4{font-size:.76rem;font-weight:700;margin-bottom:2px}
-.alert-card.checkpoint h4{color:#92400E}
-.alert-card.buffer h4{color:#14532D}
-.alert-card p{font-size:.71rem;line-height:1.55;color:var(--text-mid)}
+/* ─── CALENDAR ─── */
+.cal-btn{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:5px 12px;cursor:pointer;font-size:.71rem;color:var(--muted);margin-bottom:9px;transition:background .12s}
+.cal-btn:hover{background:var(--bg)}
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(75px,1fr));gap:3px;margin-bottom:16px}
+.cal-grid.h{display:none}
+.ccell{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:5px 8px;text-align:center}
+.ccell .dn{font-size:.7rem;font-weight:600;color:var(--navy)}
+.ccell .dd{font-size:.62rem;color:var(--muted)}
+.ccell.td{background:#EFF6FF;border-color:#93C5FD}
 
-/* ── CALENDAR ── */
-.cal-toggle-btn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 13px;cursor:pointer;font-size:.72rem;color:var(--text-muted);margin-bottom:9px;transition:background .13s}
-.cal-toggle-btn:hover{background:var(--gray-lt)}
-.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:3px;margin-bottom:16px}
-.cal-grid.hidden{display:none}
-.cal-cell{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:5px 7px;text-align:center;font-size:.65rem}
-.cal-cell .dn{font-weight:700;color:var(--navy)}
-.cal-cell .dt{color:var(--text-muted);font-size:.61rem}
-.cal-cell.today-d{background:var(--yellow-lt);border-color:var(--yellow)}
-.cal-cell.today-d .dn{color:var(--navy-dark)}
+/* ─── TASK TABLE ─── */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:24px}
+.tbl-toolbar{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
+.fb{padding:3px 10px;border-radius:3px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:.69rem;color:var(--muted);font-weight:500;transition:all .12s;white-space:nowrap}
+.fb:hover{background:var(--border-lt)}
+.fb.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.fsep{width:1px;height:15px;background:var(--border);flex-shrink:0}
+.freset{margin-left:auto;padding:3px 9px;border-radius:3px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:.68rem;color:var(--muted);transition:all .12s}
+.freset:hover{background:#FEF2F2;color:#E74C3C;border-color:#FECACA}
+.t-table{width:100%;border-collapse:collapse}
+.t-table th{background:var(--navy);color:rgba(255,255,255,.6);padding:8px 12px;font-size:.67rem;font-weight:500;text-align:left;white-space:nowrap}
+.t-table td{padding:9px 12px;border-bottom:1px solid var(--border-lt);vertical-align:middle}
+.t-row{cursor:pointer}
+.t-row:hover td{background:var(--bg)}
+.t-row.done td{opacity:.55}
+.t-row.done .tname{text-decoration:line-through}
+.t-row.done td:first-child,.t-row.done td:nth-child(2){opacity:1}
+.t-row.hf{display:none}
+.det-row{display:none}
+.det-row.open{display:table-row}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:20px;right:20px;background:var(--navy-dark);color:#fff;padding:10px 15px;border-radius:8px;font-size:.76rem;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(70px);opacity:0;transition:all .25s;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+/* status button */
+.sbtn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:3px;border:1px solid transparent;cursor:pointer;font-size:.68rem;font-weight:600;transition:all .12s;white-space:nowrap;font-family:inherit}
+.sbtn:hover{filter:brightness(.95)}
+.sbtn.s0{background:#F1F5F9;color:var(--s0);border-color:#E2E8F0}
+.sbtn.s1{background:#EFF6FF;color:var(--s1);border-color:#BFDBFE}
+.sbtn.s2{background:#F0FDF4;color:var(--s2);border-color:#BBF7D0}
+.sbtn.s3{background:#FEF2F2;color:var(--s3);border-color:#FECACA}
+
+/* phase tag */
+.ptag{display:inline-block;padding:1px 7px;border-radius:2px;font-size:.62rem;font-weight:600;color:#fff}
+/* resp tag */
+.rtag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:.61rem;font-weight:500;color:#fff;margin:1px}
+/* expand */
+.xbtn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.72rem;padding:2px 5px;border-radius:2px;transition:all .1s;font-family:inherit}
+.xbtn:hover{background:var(--border-lt);color:var(--navy)}
+.xbtn.open{color:var(--navy)}
+
+/* detail */
+.det-inner{padding:12px 14px 14px 38px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg)}
+@media(max-width:580px){.det-inner{grid-template-columns:1fr;padding-left:14px}}
+.db{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:9px 11px}
+.db h5{font-size:.61rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.db p{font-size:.73rem;line-height:1.6;color:var(--text2)}
+.nb{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:9px 11px}
+.nb h5{font-size:.61rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ni{width:100%;border:1px solid var(--border);border-radius:3px;padding:7px 9px;font-size:.74rem;font-family:inherit;resize:vertical;min-height:50px;color:var(--text);background:var(--bg);transition:border .15s}
+.ni:focus{outline:none;border-color:var(--navy);background:#fff}
+.ni::placeholder{color:#B0BEC5}
+.nsaved{font-size:.64rem;color:var(--s2);margin-top:2px;opacity:0;transition:opacity .3s}
+.nsaved.show{opacity:1}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:rgba(255,255,255,.9);padding:9px 15px;border-radius:4px;font-size:.75rem;z-index:999;transform:translateY(60px);opacity:0;transition:all .22s;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .toast.show{transform:translateY(0);opacity:1}
 
-footer{text-align:center;padding:16px;font-size:.68rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:4px}
+footer{text-align:center;padding:14px;font-size:.67rem;color:var(--muted);border-top:1px solid var(--border);margin-top:4px}
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
-<header class="site-header">
-  <div class="header-main">
-    <div class="hdr-icon">💊</div>
-    <div class="hdr-title">
-      <h1>약품 자동 분류 시스템</h1>
+<header class="hdr">
+  <div class="hdr-inner">
+    <span class="hdr-mark">💊</span>
+    <div class="hdr-info">
+      <h1>약품 자동 분류 시스템 — 일정 트래커</h1>
       <p>Automated Medication Dispensing &amp; Classification System</p>
     </div>
-    <div class="hdr-chips">
-      <div class="hdr-chip">D1 <b>2026-05-20</b></div>
-      <div class="hdr-chip">마감 <b>2026-06-29</b></div>
-      <div class="hdr-chip">5/26 석가탄신일 휴무</div>
-      <div class="sync-pill">
-        <div class="sync-dot" id="syncDot"></div>
-        <span id="syncText">초기화 중...</span>
-        <span id="lastUpdate"></span>
+    <div class="hdr-right">
+      <div class="hdr-deadline">
+        <div class="dl">프로젝트 마감</div>
+        <div class="dt">2026-06-29 (D28)</div>
+      </div>
+      <div class="hdr-sync">
+        <div class="sdot" id="sdot"></div>
+        <span id="stxt">연결 중...</span>
+        <span id="lastUpd"></span>
       </div>
     </div>
   </div>
-  <div class="header-progress">
-    <div class="hpb-wrap"><div class="hpb-fill" id="hpbFill" style="width:0%"></div></div>
-    <div class="hpb-pct" id="hpbPct">0%</div>
-    <div class="hpb-counts">
-      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s0)"></div><span id="hc0">0</span> 미시작</div>
-      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s1)"></div><span id="hc1">0</span> 진행중</div>
-      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s2)"></div><span id="hc2">0</span> 완료</div>
-      <div class="hpb-c"><div class="hpb-cdot" style="background:var(--s3)"></div><span id="hc3">0</span> 지연</div>
+  <div class="hdr-prog">
+    <div class="prog-bar-wrap"><div class="prog-bar-fill" id="pbFill" style="width:0%"></div></div>
+    <div class="prog-pct" id="pbPct">0%</div>
+    <div class="prog-counts">
+      <div class="prog-c"><div class="prog-cdot" style="background:var(--s0)"></div><span id="pc0">0</span> 미시작</div>
+      <div class="prog-c"><div class="prog-cdot" style="background:var(--s1)"></div><span id="pc1">0</span> 진행중</div>
+      <div class="prog-c"><div class="prog-cdot" style="background:var(--s2)"></div><span id="pc2">0</span> 완료</div>
+      <div class="prog-c"><div class="prog-cdot" style="background:var(--s3)"></div><span id="pc3">0</span> 지연</div>
     </div>
   </div>
 </header>
 
-<div class="wrap">
+<div class="page">
 
-<!-- ══ HINT BANNER ══ -->
-<div class="hint-banner" id="hintBanner">
-  <div class="hint-icon">💡</div>
-  <div class="hint-body">
-    <h4>사용 방법</h4>
-    <ul>
-      <li><b>상태 버튼 클릭</b> → 미시작 → 진행중 → 완료 → 지연 순으로 전환, Firebase로 <b>팀원 전체 즉시 동기화</b></li>
-      <li><b>Gantt 차트</b>가 현재 일정 전체를 보여줍니다. 노란 선 = 오늘, 주황 선 = 체크포인트</li>
-      <li><b>태스크 행 클릭</b>으로 상세 정보·메모 확인. 메모는 팀 공유됩니다</li>
-      <li>상단 <b>통계 카드</b>를 클릭하면 해당 상태만 필터링됩니다</li>
-    </ul>
+<!-- TODAY -->
+<div class="today-bar">
+  <div class="td-dday">
+    <div class="td-num" id="tdNum">—</div>
+    <div class="td-sub" id="tdSub">로딩 중</div>
   </div>
-  <button class="hint-close" onclick="document.getElementById('hintBanner').classList.add('hidden')">✕</button>
-</div>
-
-<!-- ══ TODAY PANEL ══ -->
-<div class="today-panel">
-  <div class="today-dday-box">
-    <span class="today-badge" id="todayBadge">D?</span>
-    <div class="today-date-lbl" id="todayDateLbl">로딩 중</div>
+  <div class="td-divider"></div>
+  <div class="td-tasks">
+    <div class="td-tasks-label">오늘의 태스크</div>
+    <div id="tdList"></div>
   </div>
-  <div class="today-tasks-col">
-    <h3>오늘의 태스크</h3>
-    <div id="todayTaskList"></div>
-  </div>
-  <div class="today-rem-col">
-    <h3>마감까지</h3>
-    <div class="rem-num" id="remNum">—</div>
-    <div class="rem-sub">작업일 남음</div>
+  <div class="td-divider"></div>
+  <div class="td-rem">
+    <div class="td-rem-num" id="tdRem">—</div>
+    <div class="td-rem-sub">작업일 남음</div>
   </div>
 </div>
 
-<!-- ══ GANTT CHART (MAIN) ══ -->
-<div class="sec-hdr">
-  <div class="sec-accent"></div>
-  <div class="sec-label">Gantt 차트 — 전체 일정</div>
-  <div class="sec-line"></div>
-</div>
-<div class="gantt-section">
-  <div class="gantt-toolbar">
-    <span style="font-size:.72rem;color:var(--text-muted)">28 작업일 · D1=5/20 · D28=6/29</span>
+<!-- GANTT -->
+<div class="sec"><div class="sec-bar"></div><div class="sec-txt">Gantt 차트 — 전체 일정</div><div class="sec-line"></div></div>
+<div class="gantt-wrap">
+  <div class="gantt-head">
+    <div class="gantt-head-left">D1 = 2026-05-20 &nbsp;·&nbsp; D28 = 2026-06-29 &nbsp;·&nbsp; 5/26 석가탄신일 휴무</div>
     <div class="gantt-legend">
-      <div class="gl-item"><div class="gl-bar" style="background:var(--p1)"></div>Phase 1</div>
-      <div class="gl-item"><div class="gl-bar" style="background:var(--p2)"></div>Phase 2</div>
-      <div class="gl-item"><div class="gl-bar" style="background:var(--p3)"></div>Phase 3</div>
-      <div class="gl-item"><div class="gl-bar" style="background:var(--p4)"></div>Phase 4</div>
-      <div class="gl-item"><div class="gl-bar" style="background:var(--p5)"></div>Phase 5</div>
-      <div class="gl-item"><div class="gl-bar" style="background:var(--rl)"></div>RL 트랙</div>
-      <div class="gl-item"><div class="gl-line-y"></div>오늘</div>
-      <div class="gl-item"><div class="gl-line-o"></div>체크포인트</div>
+      <div class="gl"><div class="gl-b" style="background:var(--p1)"></div>Phase 1</div>
+      <div class="gl"><div class="gl-b" style="background:var(--p2)"></div>Phase 2</div>
+      <div class="gl"><div class="gl-b" style="background:var(--p3)"></div>Phase 3</div>
+      <div class="gl"><div class="gl-b" style="background:var(--p4)"></div>Phase 4</div>
+      <div class="gl"><div class="gl-b" style="background:var(--p5)"></div>Phase 5</div>
+      <div class="gl"><div class="gl-b" style="background:var(--rl)"></div>RL</div>
+      <div class="gl"><div class="gl-ln" style="background:rgba(14,30,53,.7)"></div>오늘</div>
+      <div class="gl"><div class="gl-ln" style="background:#E67E22"></div>체크포인트</div>
     </div>
   </div>
   <div class="gantt-scroll">
     <div class="gantt-inner">
-      <div id="ganttDateRow" class="g-date-row"></div>
-      <div id="ganttBody"></div>
+      <div class="g-drow" id="gDateRow"></div>
+      <div id="gBody"></div>
     </div>
   </div>
 </div>
 
-<!-- ══ STATS ══ -->
-<div class="stat-row">
-  <div class="stat-card sc-all" onclick="filterTable('all')">
-    <div class="stat-val" id="scTotal">32</div>
-    <div class="stat-lbl">전체 태스크</div>
-  </div>
-  <div class="stat-card sc-s0" onclick="filterTable('s0')">
-    <div class="stat-val" id="scS0">—</div>
-    <div class="stat-lbl">⬜ 미시작</div>
-  </div>
-  <div class="stat-card sc-s1" onclick="filterTable('s1')">
-    <div class="stat-val" id="scS1">—</div>
-    <div class="stat-lbl">🔵 진행중</div>
-  </div>
-  <div class="stat-card sc-s2" onclick="filterTable('s2')">
-    <div class="stat-val" id="scS2">—</div>
-    <div class="stat-lbl">✅ 완료</div>
-  </div>
-  <div class="stat-card sc-s3" onclick="filterTable('s3')">
-    <div class="stat-val" id="scS3">—</div>
-    <div class="stat-lbl">⚠️ 지연</div>
-  </div>
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-card all" onclick="setFilter('all')"><div class="sv" id="svAll">32</div><div class="sl">전체 태스크</div></div>
+  <div class="stat-card s0"  onclick="setFilter('s0')"><div class="sv" id="sv0">—</div><div class="sl">미시작</div></div>
+  <div class="stat-card s1"  onclick="setFilter('s1')"><div class="sv" id="sv1">—</div><div class="sl">진행중</div></div>
+  <div class="stat-card s2"  onclick="setFilter('s2')"><div class="sv" id="sv2">—</div><div class="sl">완료</div></div>
+  <div class="stat-card s3"  onclick="setFilter('s3')"><div class="sv" id="sv3">—</div><div class="sl">지연</div></div>
 </div>
 
-<!-- ══ PHASE CARDS ══ -->
-<div class="sec-hdr">
-  <div class="sec-accent"></div>
-  <div class="sec-label">단계별 개요</div>
-  <div class="sec-line"></div>
-</div>
-<div class="phase-cards" id="phaseCards"></div>
+<!-- PHASE -->
+<div class="sec"><div class="sec-bar"></div><div class="sec-txt">단계별 진행</div><div class="sec-line"></div></div>
+<div class="phase-grid" id="phaseGrid"></div>
 
-<!-- ══ CHECKPOINTS ══ -->
-<div class="sec-hdr">
-  <div class="sec-accent"></div>
-  <div class="sec-label">주요 이정표</div>
-  <div class="sec-line"></div>
-</div>
-<div class="alert-row">
-  <div class="alert-card checkpoint"><div class="alert-icon">⚡</div><div>
+<!-- ALERTS -->
+<div class="sec"><div class="sec-bar"></div><div class="sec-txt">주요 이정표</div><div class="sec-line"></div></div>
+<div class="alert-grid">
+  <div class="alc cp"><div class="alc-icon">⚡</div><div>
     <h4>1차 체크포인트 — D17 (6/12 금)</h4>
     <p>열기 학습 완료 다음 날 평가. 성공률 확인 및 닫기 학습 4일차 중간 점검.</p>
   </div></div>
-  <div class="alert-card checkpoint"><div class="alert-icon">⚡</div><div>
+  <div class="alc cp"><div class="alc-icon">⚡</div><div>
     <h4>최종 Go/No-go — D21 (6/18 목)</h4>
     <p>닫기 학습 완료 다음 날 최종 평가. 메인 시연 통합 여부 확정. 마감 6일 전.</p>
   </div></div>
-  <div class="alert-card buffer" style="grid-column:1/-1"><div class="alert-icon">🔒</div><div>
+  <div class="alc buf2"><div class="alc-icon">🔒</div><div>
     <h4>안정화 버퍼 — D26~D28 (6/25~6/29)</h4>
     <p>신규 기능 개발 절대 금지. 속도·좌표·흡착·카메라·PLC·대시보드 안정화만 진행. 시연 3회 이상 연속 성공 목표.</p>
   </div></div>
 </div>
 
-<!-- ══ TASK TABLE ══ -->
-<div class="sec-hdr">
-  <div class="sec-accent"></div>
-  <div class="sec-label">태스크 상세</div>
-  <div class="sec-line"></div>
-</div>
-<button class="cal-toggle-btn" onclick="toggleCal()">📅 작업일 ↔ 날짜 대응표 펼치기</button>
-<div class="cal-grid hidden" id="calGrid"></div>
+<!-- TABLE -->
+<div class="sec"><div class="sec-bar"></div><div class="sec-txt">태스크 상세</div><div class="sec-line"></div></div>
+<button class="cal-btn" onclick="document.getElementById('calGrid').classList.toggle('h')">📅 작업일 ↔ 날짜 대응표</button>
+<div class="cal-grid h" id="calGrid"></div>
 
-<div class="table-section">
-  <div class="table-toolbar">
-    <button class="f-btn" id="fAll"   onclick="filterTable('all')">전체</button>
-    <button class="f-btn" id="fP1"    onclick="filterTable('p1')">Phase 1</button>
-    <button class="f-btn" id="fP2"    onclick="filterTable('p2')">Phase 2</button>
-    <button class="f-btn" id="fP3"    onclick="filterTable('p3')">Phase 3</button>
-    <button class="f-btn" id="fP4"    onclick="filterTable('p4')">Phase 4</button>
-    <button class="f-btn" id="fP5"    onclick="filterTable('p5')">Phase 5</button>
-    <button class="f-btn" id="fRl"    onclick="filterTable('rl')">RL 트랙</button>
-    <div class="f-sep"></div>
-    <button class="f-btn" id="fS0"    onclick="filterTable('s0')">미시작</button>
-    <button class="f-btn" id="fS1"    onclick="filterTable('s1')">진행중</button>
-    <button class="f-btn" id="fS2"    onclick="filterTable('s2')">완료</button>
-    <button class="f-btn" id="fS3"    onclick="filterTable('s3')">지연</button>
-    <button class="f-btn" id="fToday" onclick="filterTable('today')">📌 오늘</button>
-    <button class="f-reset" onclick="resetTracker()">초기화</button>
+<div class="tbl-wrap">
+  <div class="tbl-toolbar">
+    <button class="fb on" id="fAll"   onclick="setFilter('all')">전체</button>
+    <button class="fb" id="fP1"    onclick="setFilter('p1')">Phase 1</button>
+    <button class="fb" id="fP2"    onclick="setFilter('p2')">Phase 2</button>
+    <button class="fb" id="fP3"    onclick="setFilter('p3')">Phase 3</button>
+    <button class="fb" id="fP4"    onclick="setFilter('p4')">Phase 4</button>
+    <button class="fb" id="fP5"    onclick="setFilter('p5')">Phase 5</button>
+    <button class="fb" id="fRl"    onclick="setFilter('rl')">RL 트랙</button>
+    <div class="fsep"></div>
+    <button class="fb" id="fS0"    onclick="setFilter('s0')">미시작</button>
+    <button class="fb" id="fS1"    onclick="setFilter('s1')">진행중</button>
+    <button class="fb" id="fS2"    onclick="setFilter('s2')">완료</button>
+    <button class="fb" id="fS3"    onclick="setFilter('s3')">지연</button>
+    <button class="fb" id="fTd"    onclick="setFilter('today')">오늘</button>
+    <button class="freset" onclick="resetAll()">초기화</button>
   </div>
   <div style="overflow-x:auto">
-  <table class="task-table">
+  <table class="t-table">
     <thead><tr>
-      <th style="width:24px"></th>
-      <th style="width:110px">상태</th>
-      <th style="width:110px">단계</th>
+      <th style="width:22px"></th>
+      <th style="width:105px">상태</th>
+      <th style="width:105px">단계</th>
       <th>태스크</th>
-      <th style="width:90px">기간</th>
-      <th style="width:56px">시작</th>
-      <th style="width:56px">종료</th>
+      <th style="width:85px">기간</th>
+      <th style="width:52px">시작</th>
+      <th style="width:52px">종료</th>
       <th>담당</th>
     </tr></thead>
-    <tbody id="taskBody"></tbody>
+    <tbody id="tbody"></tbody>
   </table>
   </div>
 </div>
 
-</div><!-- /wrap -->
+</div>
 
-<div class="toast" id="toast"><span id="toastMsg">저장됨</span></div>
-
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
 <footer>약품 자동 분류 시스템 · D1=2026-05-20 · D28=2026-06-29 · Firebase 실시간 동기화</footer>
 
 <script>
-/* ══ Firebase 설정 ══ */
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyC7W_WRrd-X9QiCTqmG0dLMkolNyOzzajY",
-  authDomain:        "meds-tracker-cec4b.firebaseapp.com",
-  databaseURL:       "https://meds-tracker-cec4b-default-rtdb.firebaseio.com",
-  projectId:         "meds-tracker-cec4b",
-  storageBucket:     "meds-tracker-cec4b.firebasestorage.app",
-  messagingSenderId: "1006315783271",
-  appId:             "1:1006315783271:web:fec55188a0622277d5c0c2"
+/* ══ CONFIG ══ */
+const FB_CFG = {
+  apiKey:"AIzaSyC7W_WRrd-X9QiCTqmG0dLMkolNyOzzajY",
+  authDomain:"meds-tracker-cec4b.firebaseapp.com",
+  databaseURL:"https://meds-tracker-cec4b-default-rtdb.firebaseio.com",
+  projectId:"meds-tracker-cec4b",
+  storageBucket:"meds-tracker-cec4b.firebasestorage.app",
+  messagingSenderId:"1006315783271",
+  appId:"1:1006315783271:web:fec55188a0622277d5c0c2"
 };
-
-const USE_FIREBASE = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
-const LS_KEY = 'meds_tracker_v3';
+const USE_FB = FB_CFG.apiKey !== 'YOUR_API_KEY';
+const LS_KEY = 'meds_v3';
 const FB_PATH = 'meds_tracker_v2';
 
-/* ── 날짜 데이터 ── */
-const DAY_DATES  = {1:'5/20(수)',2:'5/21(목)',3:'5/22(금)',4:'5/25(월)',5:'5/27(수)',6:'5/28(목)',7:'5/29(금)',8:'6/1(월)',9:'6/2(화)',10:'6/3(수)',11:'6/4(목)',12:'6/5(금)',13:'6/8(월)',14:'6/9(화)',15:'6/10(수)',16:'6/11(목)',17:'6/12(금)',18:'6/15(월)',19:'6/16(화)',20:'6/17(수)',21:'6/18(목)',22:'6/19(금)',23:'6/22(월)',24:'6/23(화)',25:'6/24(수)',26:'6/25(목)',27:'6/26(금)',28:'6/29(월)'};
-const MONTH_DATES= {1:'5/20',2:'5/21',3:'5/22',4:'5/25',5:'5/27',6:'5/28',7:'5/29',8:'6/1',9:'6/2',10:'6/3',11:'6/4',12:'6/5',13:'6/8',14:'6/9',15:'6/10',16:'6/11',17:'6/12',18:'6/15',19:'6/16',20:'6/17',21:'6/18',22:'6/19',23:'6/22',24:'6/23',25:'6/24',26:'6/25',27:'6/26',28:'6/29'};
-const ACTUAL_DATES={1:[2026,5,20],2:[2026,5,21],3:[2026,5,22],4:[2026,5,25],5:[2026,5,27],6:[2026,5,28],7:[2026,5,29],8:[2026,6,1],9:[2026,6,2],10:[2026,6,3],11:[2026,6,4],12:[2026,6,5],13:[2026,6,8],14:[2026,6,9],15:[2026,6,10],16:[2026,6,11],17:[2026,6,12],18:[2026,6,15],19:[2026,6,16],20:[2026,6,17],21:[2026,6,18],22:[2026,6,19],23:[2026,6,22],24:[2026,6,23],25:[2026,6,24],26:[2026,6,25],27:[2026,6,26],28:[2026,6,29]};
+/* ══ DATES ══ */
+const DD = {1:'5/20(수)',2:'5/21(목)',3:'5/22(금)',4:'5/25(월)',5:'5/27(수)',6:'5/28(목)',7:'5/29(금)',8:'6/1(월)',9:'6/2(화)',10:'6/3(수)',11:'6/4(목)',12:'6/5(금)',13:'6/8(월)',14:'6/9(화)',15:'6/10(수)',16:'6/11(목)',17:'6/12(금)',18:'6/15(월)',19:'6/16(화)',20:'6/17(수)',21:'6/18(목)',22:'6/19(금)',23:'6/22(월)',24:'6/23(화)',25:'6/24(수)',26:'6/25(목)',27:'6/26(금)',28:'6/29(월)'};
+const MD = {1:'5/20',2:'5/21',3:'5/22',4:'5/25',5:'5/27',6:'5/28',7:'5/29',8:'6/1',9:'6/2',10:'6/3',11:'6/4',12:'6/5',13:'6/8',14:'6/9',15:'6/10',16:'6/11',17:'6/12',18:'6/15',19:'6/16',20:'6/17',21:'6/18',22:'6/19',23:'6/22',24:'6/23',25:'6/24',26:'6/25',27:'6/26',28:'6/29'};
+const AD = {1:[2026,5,20],2:[2026,5,21],3:[2026,5,22],4:[2026,5,25],5:[2026,5,27],6:[2026,5,28],7:[2026,5,29],8:[2026,6,1],9:[2026,6,2],10:[2026,6,3],11:[2026,6,4],12:[2026,6,5],13:[2026,6,8],14:[2026,6,9],15:[2026,6,10],16:[2026,6,11],17:[2026,6,12],18:[2026,6,15],19:[2026,6,16],20:[2026,6,17],21:[2026,6,18],22:[2026,6,19],23:[2026,6,22],24:[2026,6,23],25:[2026,6,24],26:[2026,6,25],27:[2026,6,26],28:[2026,6,29]};
 
-/* ── 상수 ── */
+/* ══ CONSTANTS ══ */
 const PC  = {1:'var(--p1)',2:'var(--p2)',3:'var(--p3)',4:'var(--p4)',5:'var(--p5)',rl:'var(--rl)'};
-const PL  = {1:'Phase 1 기초',2:'Phase 2 컴포넌트',3:'Phase 3 기능완성',4:'Phase 4 통합',5:'Phase 5 마무리',rl:'RL 트랙'};
-const RC  = {'1번 시스템 총괄':'#1565C0','1번 시스템':'#1565C0','2번 로봇팔':'#1B5E20','3번 비전':'#BF360C','4번 강화학습':'#004D40','5번 하드웨어':'#37474F','전원':'#4A148C'};
-const STATUSES = ['미시작','진행중','완료','지연'];
-const SICONS   = ['⬜','🔵','✅','⚠️'];
-const SCLS     = ['s0','s1','s2','s3'];
-const SDOT_CLR = ['var(--s0)','var(--s1)','var(--s2)','var(--s3)'];
+const PL  = {1:'Phase 1',2:'Phase 2',3:'Phase 3',4:'Phase 4',5:'Phase 5',rl:'RL 트랙'};
+const PLF = {1:'Phase 1 기초',2:'Phase 2 컴포넌트',3:'Phase 3 기능완성',4:'Phase 4 통합',5:'Phase 5 마무리',rl:'RL 트랙'};
+const RC  = {'1번 시스템 총괄':'#1E4080','1번 시스템':'#1E4080','2번 로봇팔':'#1A5C2A','3번 비전':'#7B2000','4번 강화학습':'#0D4D3A','5번 하드웨어':'#2D3748','전원':'#4A148C'};
+const SN  = ['미시작','진행중','완료','지연'];
+const SI  = ['⬜','🔵','✅','⚠️'];
+const SC  = ['s0','s1','s2','s3'];
+const SDK = ['var(--s0)','var(--s1)','var(--s2)','var(--s3)'];
 
-/* ── 태스크 데이터 ── */
+/* ══ DATA ══ */
 const TASKS = [
   {phase:1,name:'전체 시스템 구조 확정',ds:1,de:2,resp:['1번 시스템 총괄'],detail:'시나리오를 처방 입력→캐비닛 위치 확인→서랍 개폐→약품 피킹→검증→병동별 분류 박스 적재→최종 확인으로 확정.',tech:'ROS2, Python, DB, 대시보드 구조 설계',done:'상태 흐름, 토픽, DB 구조, 하드웨어 연결 대상이 문서로 정리됨.',next:'팀원별 개발 범위와 인터페이스 확정'},
   {phase:1,name:'하드웨어 배치 설계',ds:1,de:3,resp:['5번 하드웨어'],detail:'로봇팔 작업 범위 안에 캐비닛, 검증 카메라, 병동별 분류 박스, 온습도 측정 위치, 전자석 부착 위치를 배치.',tech:'캐비닛, 수납 박스, 미끄럼방지 테이프, 카메라 거치대',done:'로봇팔 기준으로 캐비닛과 박스 위치 고정, 좌표 측정 가능 상태.',next:'로봇 좌표 설정과 캐비닛 물리 구성으로 진행'},
@@ -466,10 +423,10 @@ const TASKS = [
   {phase:2,name:'PLC 기본 입출력 구성',ds:6,de:9,resp:['5번 하드웨어'],detail:'시작·정지 버튼, 사람 접근 감지 입력, 전자석 제어 출력, 상태등·경고등 구성.',tech:'PLC, 릴레이, 버튼, 접근 감지 센서, 전자석',done:'PLC 입력에 따라 전자석과 상태 출력이 안정적으로 동작.',next:'ROS2 또는 백엔드 연동을 위한 신호 정의'},
   {phase:2,name:'Arduino 온습도 측정',ds:6,de:9,resp:['5번 하드웨어'],detail:'DHT22로 캐비닛 주변 온도와 습도를 측정하고 Serial 통신으로 PC 또는 ROS2 노드에 전달.',tech:'Arduino, DHT22, Python Serial, ROS2 topic',done:'온도와 습도 값이 주기적으로 출력되고 대시보드에 표시.',next:'온습도 이상 상태를 시스템 오류 조건에 포함'},
   {phase:'rl',name:'강화학습 서랍 열기 학습',ds:8,de:16,resp:['4번 강화학습'],detail:'판단은 DB와 task manager가 하고 서랍 여는 동작만 학습. 보상: 손잡이 접근, 접촉 유지, 서랍 이동 거리.',tech:'Stable-Baselines3, PPO 또는 SAC',done:'시뮬레이션에서 서랍을 일정 거리 이상 열 수 있음.',next:'성공률 낮으면 메인 시연과 분리 → 심화 결과로 발표'},
-  {phase:2,name:'그리퍼 및 흡착 구조 구성',ds:8,de:11,resp:['2번 로봇팔','5번 하드웨어'],detail:'흡착식 그리퍼 사용 시 흡착 패드 중심점을 TCP 기준으로 정의. 실제 흡착이 어렵다면 그리퍼 중간점 기준 하드코딩.',tech:'흡착 그리퍼 또는 2-finger 그리퍼, 3D 프린팅 지그, 전자석',done:'박스형 약품 1개를 안정적으로 집을 수 있음.',next:'단일 약품 피킹 루틴 구현'},
+  {phase:2,name:'그리퍼 및 흡착 구조 구성',ds:8,de:11,resp:['2번 로봇팔','5번 하드웨어'],detail:'흡착식 그리퍼 사용 시 흡착 패드 중심점을 TCP 기준으로 정의.',tech:'흡착 그리퍼 또는 2-finger 그리퍼, 3D 프린팅 지그, 전자석',done:'박스형 약품 1개를 안정적으로 집을 수 있음.',next:'단일 약품 피킹 루틴 구현'},
   {phase:2,name:'단일 약품 피킹',ds:9,de:12,resp:['2번 로봇팔'],detail:'박스형 약품 1개를 대상으로 접근→집기→상승→검증 위치 이동→분류 박스 적재까지 단독 동작 구현.',tech:'ROS2, MoveJ, MoveL, gripper open/close',done:'박스형 약품 1개를 5회 중 4회 이상 성공적으로 이동.',next:'반복 피킹과 검증 기능 연결'},
   {phase:2,name:'약품 검증 1차 구현',ds:9,de:12,resp:['3번 비전'],detail:'로봇이 약품을 집은 뒤 카메라 앞에 가져오면 크기, 라벨, 색상, QR, OCR 중 가능한 요소를 확인.',tech:'OpenCV, OCR, QR, 이미지 비교, 카메라',done:'집은 약품이 DB의 목표 약품과 맞는지 판정 가능.',next:'검증 실패 시 로봇 정지와 사용자 확인 요청으로 연결'},
-  {phase:2,name:'재고 차감 로직 구현',ds:10,de:13,resp:['1번 시스템 총괄'],detail:'피킹 명령 시 로봇 작업 DB에서 예약 수량 감소, 검증 통과 후 실제 재고 DB에 반영. 2단계 재고 관리.',tech:'DB, Python, API',done:'검증 전 실제 재고 미확정 차감, 검증 통과 후 재고 반영.',next:'피킹 실패와 검증 실패 상황에서도 재고가 꼬이지 않아야 함'},
+  {phase:2,name:'재고 차감 로직 구현',ds:10,de:13,resp:['1번 시스템 총괄'],detail:'피킹 명령 시 로봇 작업 DB에서 예약 수량 감소, 검증 통과 후 실제 재고 DB에 반영.',tech:'DB, Python, API',done:'검증 전 실제 재고 미확정 차감, 검증 통과 후 재고 반영.',next:'피킹 실패와 검증 실패 상황에서도 재고가 꼬이지 않아야 함'},
   {phase:3,name:'반복 피킹 로직',ds:11,de:14,resp:['1번 시스템','2번 로봇팔'],detail:'처방에 약품이 여러 개 있을 때 약품 개수만큼 반복 동작. DB에서 순차 실행.',tech:'ROS2 task manager, DB, Python',done:'약품 2개 이상을 순서대로 피킹하고 검증 위치까지 이동.',next:'병동별 분류 박스 적재로 연결'},
   {phase:3,name:'약품 배치 가능 범위 판단',ds:11,de:14,resp:['1번 시스템','3번 비전'],detail:'약품 크기 기준으로 캐비닛 칸 안에 몇 열까지 배치 가능한지 계산.',tech:'Python, DB, 크기 기반 규칙 알고리즘',done:'약품 크기에 따라 피킹 가능 여부가 자동 판단.',next:'애매한 크기 약품은 비전 확인 또는 수동 확인으로 넘김'},
   {phase:3,name:'병동별 분류 박스 위치 설정',ds:12,de:14,resp:['2번 로봇팔','5번 하드웨어'],detail:'병동별로 색이 다른 박스를 배치하고 각 박스의 고정 좌표를 설정.',tech:'병동별 박스, QR 또는 색상 라벨, 로봇 좌표',done:'작업의 병동 정보에 따라 목표 적재 박스가 자동 선택.',next:'약품 박스 적재 알고리즘과 로봇 적재 동작으로 진행'},
@@ -477,7 +434,7 @@ const TASKS = [
   {phase:3,name:'검증 실패 예외 처리',ds:13,de:16,resp:['1번 시스템','3번 비전'],detail:'약품 개수·종류·OCR·QR·크기 검증이 DB와 다르면 로봇 정지, 대시보드에 사용자 검증 요청 표시.',tech:'대시보드, DB 상태값, ROS2 status topic',done:'검증 실패 시 다음 피킹으로 넘어가지 않고 사용자 확인 대기.',next:'안전성과 재시작 로직을 포함한 통합 테스트'},
   {phase:3,name:'PLC, Arduino, ROS2 연동',ds:13,de:16,resp:['5번 하드웨어','1번 시스템'],detail:'PLC의 정지 신호, 사람 접근 신호, 전자석 상태와 Arduino 온습도 데이터를 ROS2 또는 백엔드로 전달.',tech:'PLC, Arduino, Python Serial, Modbus, ROS2',done:'대시보드에서 온습도, 전자석 상태, 접근 감지 상태 확인 가능.',next:'오류 시나리오와 안전 정지 테스트'},
   {phase:'rl',name:'강화학습 서랍 닫기 학습',ds:14,de:20,resp:['4번 강화학습'],detail:'열린 서랍을 닫는 동작 학습. 실제 프로젝트 핵심 시연은 고정 좌표 기반 유지.',tech:'PPO 또는 SAC, 시뮬레이션',done:'시뮬레이션에서 서랍 닫기 성공률이 기준 이상.',next:'D21 체크포인트에서 메인 시연 통합 or 분리 시연 결정'},
-  {phase:3,name:'약품 적재 동작 구현',ds:14,de:17,resp:['2번 로봇팔'],detail:'검증 통과한 약품을 병동별 박스의 지정 위치에 놓음. 적재 위치는 DB에서 계산된 좌표 사용.',tech:'ROS2, MoveL, 병동 박스 좌표, gripper 제어',done:'약품이 병동별 박스 안의 지정 위치에 놓임.',next:'다중 약품 통합 테스트로 진행'},
+  {phase:3,name:'약품 적재 동작 구현',ds:14,de:17,resp:['2번 로봇팔'],detail:'검증 통과한 약품을 병동별 박스의 지정 위치에 놓음.',tech:'ROS2, MoveL, 병동 박스 좌표, gripper 제어',done:'약품이 병동별 박스 안의 지정 위치에 놓임.',next:'다중 약품 통합 테스트로 진행'},
   {phase:4,name:'전체 1차 통합',ds:16,de:20,resp:['전원'],detail:'처방 입력→로봇팔 피킹→검증→병동 박스 적재까지 하나의 작업 ID로 연결.',tech:'ROS2, DB, 대시보드, 로봇팔, 비전',done:'버튼 하나로 단일 약품 피킹과 적재가 끝까지 실행.',next:'다중 약품 통합으로 진행'},
   {phase:4,name:'다중 약품 통합',ds:20,de:22,resp:['전원'],detail:'약품 2~3종을 대상으로 캐비닛 칸 선택, 반복 피킹, 검증, 병동 박스 적재를 연결.',tech:'DB 기반 작업 리스트, 로봇 반복 동작, 비전 검증',done:'약품 2~3종이 순서대로 피킹되고 같은 병동 박스에 적재.',next:'다중 병동 분류로 확장'},
   {phase:4,name:'다중 병동 분류',ds:21,de:23,resp:['1번 시스템','2번 로봇팔'],detail:'병동 정보에 따라 서로 다른 색상의 박스에 약품을 분류.',tech:'병동별 박스, DB, 로봇 좌표',done:'1병동, 2병동 등 병동별로 다른 박스에 적재 가능.',next:'최종 시연 흐름 확정'},
@@ -488,229 +445,209 @@ const TASKS = [
   {phase:5,name:'최종 리허설 및 안정화',ds:26,de:28,resp:['전원'],detail:'로봇 속도, 좌표 오차, 흡착 실패, 약품 방향, 카메라 조명, PLC 신호, 대시보드 상태 지연 수정. ★ 신규 기능 절대 금지.',tech:'전체 하드웨어, 전체 소프트웨어',done:'최종 시연이 최소 3회 이상 안정적으로 성공.',next:'최종 발표 및 시연 준비 완료'},
 ];
 
-/* ── 상태 ── */
+/* ══ STATE ══ */
 let STATE = { statuses: Array(TASKS.length).fill(0), notes: Array(TASKS.length).fill('') };
-let isBuilt = false;
-let stateRef = null;
+let built = false;
+let fbRef = null;
 
-/* ── 오늘 D-day ── */
-function getTodayD() {
-  const n = new Date(), y = n.getFullYear(), m = n.getMonth()+1, d = n.getDate();
-  for (let i=1;i<=28;i++) { const [ay,am,ad]=ACTUAL_DATES[i]; if(ay===y&&am===m&&ad===d) return i; }
-  if (y<2026||(y===2026&&m<5)||(y===2026&&m===5&&d<20)) return 0;
-  return 29;
+/* ══ TODAY ══ */
+function todayD() {
+  const n=new Date(), y=n.getFullYear(), m=n.getMonth()+1, d=n.getDate();
+  for (let i=1;i<=28;i++) { const [ay,am,ad]=AD[i]; if(ay===y&&am===m&&ad===d) return i; }
+  return (y<2026||(y===2026&&m<5)||(y===2026&&m===5&&d<20)) ? 0 : 29;
 }
 
-/* ── 토스트 ── */
-let toastTimer;
-function showToast(msg='저장됨') {
-  const t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+/* ══ TOAST ══ */
+let tt;
+function toast(msg) {
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show');
+  clearTimeout(tt);
+  tt=setTimeout(()=>el.classList.remove('show'),2200);
 }
 
-/* ── Firebase 초기화 ── */
+/* ══ FIREBASE INIT ══ */
 function initApp() {
-  if (USE_FIREBASE) {
-    const app = firebase.initializeApp(FIREBASE_CONFIG);
-    const db = firebase.database();
-    stateRef = db.ref(FB_PATH);
+  if (USE_FB) {
+    /* fallback: if Firebase doesn't respond in 4s, load from localStorage */
+    const fb = setTimeout(() => { if (!built) { loadLocal(); boot(); } }, 4000);
 
-    db.ref('.info/connected').on('value', snap => {
-      const ok = snap.val();
-      const dot = document.getElementById('syncDot');
-      dot.className = 'sync-dot ' + (ok ? 'online' : 'offline');
-      document.getElementById('syncText').textContent = ok ? '실시간 연결됨' : '재연결 중...';
-    });
-
-    stateRef.on('value', snap => {
-      const data = snap.val();
-      if (data && Array.isArray(data.statuses)) {
-        STATE.statuses = data.statuses;
-        STATE.notes = data.notes || Array(TASKS.length).fill('');
-        if (data.lastUpdated) {
-          const d = new Date(data.lastUpdated);
-          document.getElementById('lastUpdate').textContent =
-            ' · ' + d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-        }
-      } else {
-        STATE.statuses = Array(TASKS.length).fill(0);
-        STATE.notes    = Array(TASKS.length).fill('');
-        stateRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
-      }
-      if (!isBuilt) { buildAll(); isBuilt = true; }
-      else { refreshUI(); }
-    });
-  } else {
-    const dot = document.getElementById('syncDot');
-    dot.className = 'sync-dot local';
-    document.getElementById('syncText').textContent = '로컬 모드';
     try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) { const s=JSON.parse(raw); STATE.statuses=s.statuses||Array(TASKS.length).fill(0); STATE.notes=s.notes||Array(TASKS.length).fill(''); }
-    } catch(e) {}
-    buildAll(); isBuilt = true;
-  }
-}
+      firebase.initializeApp(FB_CFG);
+      const db = firebase.database();
+      fbRef = db.ref(FB_PATH);
 
-/* ── 저장 ── */
-function saveState() {
-  if (USE_FIREBASE && stateRef) {
-    stateRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
+      db.ref('.info/connected').on('value', s => {
+        const ok=s.val();
+        document.getElementById('sdot').className='sdot '+(ok?'on':'off');
+        document.getElementById('stxt').textContent=ok?'실시간 연결됨':'재연결 중...';
+      });
+
+      fbRef.on('value', snap => {
+        clearTimeout(fb);
+        const data=snap.val();
+        if (data && Array.isArray(data.statuses)) {
+          STATE.statuses=data.statuses;
+          STATE.notes=data.notes||Array(TASKS.length).fill('');
+          if (data.lastUpdated) {
+            const d=new Date(data.lastUpdated);
+            document.getElementById('lastUpd').textContent=
+              ' · '+d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+          }
+        } else {
+          STATE.statuses=Array(TASKS.length).fill(0);
+          STATE.notes=Array(TASKS.length).fill('');
+          fbRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
+        }
+        if (!built) { boot(); built=true; } else { refresh(); }
+      }, err => {
+        /* permission denied → fallback */
+        clearTimeout(fb);
+        console.warn('Firebase read error:', err.message);
+        document.getElementById('sdot').className='sdot local';
+        document.getElementById('stxt').textContent='오프라인 (로컬 저장)';
+        if (!built) { loadLocal(); boot(); built=true; }
+      });
+    } catch(e) {
+      clearTimeout(fb);
+      loadLocal(); boot();
+    }
   } else {
-    localStorage.setItem(LS_KEY, JSON.stringify(STATE));
-    showToast('저장됨 (로컬)');
+    document.getElementById('sdot').className='sdot local';
+    document.getElementById('stxt').textContent='로컬 모드';
+    loadLocal(); boot();
   }
 }
 
-/* ── 전체 UI 새로고침 ── */
-function refreshUI() {
-  updateHeaderProgress();
-  updateAllRowStatuses();
-  updateNotesFromRemote();
-  buildTodayPanel(getTodayD());
-  buildPhaseCards();
-  buildGantt(getTodayD());
+function loadLocal() {
+  try {
+    const r=localStorage.getItem(LS_KEY);
+    if (r) { const s=JSON.parse(r); STATE.statuses=s.statuses||Array(TASKS.length).fill(0); STATE.notes=s.notes||Array(TASKS.length).fill(''); }
+  } catch(e) {}
 }
 
-/* ── 전체 빌드 ── */
-function buildAll() {
-  const td = getTodayD();
-  buildGanttHeader(td);
+function save() {
+  if (USE_FB && fbRef) {
+    fbRef.set({statuses:STATE.statuses,notes:STATE.notes,lastUpdated:Date.now()});
+  } else {
+    localStorage.setItem(LS_KEY,JSON.stringify(STATE));
+    toast('저장됨 (로컬)');
+  }
+}
+
+/* ══ REFRESH (remote update) ══ */
+function refresh() {
+  updateProgress();
+  updateRowStatuses();
+  syncNotes();
+  buildToday(todayD());
+  buildPhaseCards();
+  buildGantt(todayD());
+}
+
+/* ══ BOOT ══ */
+function boot() {
+  const td=todayD();
+  buildDateRow(td);
   buildGantt(td);
-  buildTodayPanel(td);
+  buildToday(td);
   buildTable();
   buildPhaseCards();
   buildCalendar(td);
-  updateHeaderProgress();
-  filterTable('all');
+  updateProgress();
+  setFilter('all');
 }
 
-/* ── 헤더 진행률 ── */
-function updateHeaderProgress() {
-  const c = [0,0,0,0];
+/* ══ PROGRESS ══ */
+function updateProgress() {
+  const c=[0,0,0,0];
   STATE.statuses.forEach(s=>c[s]++);
-  ['0','1','2','3'].forEach(i=>{ document.getElementById('hc'+i).textContent=c[i]; });
-  document.getElementById('scS0').textContent = c[0];
-  document.getElementById('scS1').textContent = c[1];
-  document.getElementById('scS2').textContent = c[2];
-  document.getElementById('scS3').textContent = c[3];
-  const pct = Math.round(c[2]/TASKS.length*100);
-  document.getElementById('hpbFill').style.width = pct+'%';
-  document.getElementById('hpbPct').textContent = pct+'%';
+  ['0','1','2','3'].forEach(i=>{ document.getElementById('pc'+i).textContent=c[i]; });
+  document.getElementById('sv0').textContent=c[0];
+  document.getElementById('sv1').textContent=c[1];
+  document.getElementById('sv2').textContent=c[2];
+  document.getElementById('sv3').textContent=c[3];
+  const pct=Math.round(c[2]/TASKS.length*100);
+  document.getElementById('pbFill').style.width=pct+'%';
+  document.getElementById('pbPct').textContent=pct+'%';
 }
 
-/* ── Today Panel ── */
-function buildTodayPanel(td) {
-  const badge   = document.getElementById('todayBadge');
-  const dateLbl = document.getElementById('todayDateLbl');
-  const list    = document.getElementById('todayTaskList');
-  const remNum  = document.getElementById('remNum');
-  if (td===0) {
-    badge.textContent='프로젝트 전'; dateLbl.textContent='D1: 5/20(수)';
-    list.innerHTML='<div style="font-size:.74rem;color:rgba(255,255,255,.5)">프로젝트 시작 전입니다</div>';
-    remNum.textContent='28'; return;
-  }
-  if (td>28) {
-    badge.textContent='완료'; dateLbl.textContent='6/29 마감';
-    list.innerHTML='<div style="font-size:.74rem;color:var(--yellow)">프로젝트가 완료되었습니다 🎉</div>';
-    remNum.textContent='0'; return;
-  }
-  badge.textContent = 'D'+td;
-  dateLbl.textContent = DAY_DATES[td];
-  const active = TASKS.filter(t=>t.ds<=td&&t.de>=td);
-  list.innerHTML = active.length
-    ? active.map(t=>{
-        const idx=TASKS.indexOf(t), s=STATE.statuses[idx];
-        return `<div class="today-task-item">
-          <div class="tphase-dot" style="background:${PC[t.phase]}"></div>
-          <span style="flex:1">${t.name}</span>
-          <span style="font-size:.66rem;opacity:.55">${SICONS[s]}</span>
-        </div>`;
-      }).join('')
-    : '<div style="font-size:.74rem;color:rgba(255,255,255,.4)">오늘 해당 태스크 없음</div>';
-  remNum.textContent = Math.max(0,28-td);
+/* ══ TODAY PANEL ══ */
+function buildToday(td) {
+  const num=document.getElementById('tdNum'),sub=document.getElementById('tdSub');
+  const list=document.getElementById('tdList'),rem=document.getElementById('tdRem');
+  if (td===0) { num.textContent='D1'; sub.textContent='5/20 시작 예정'; list.innerHTML=msg('프로젝트 시작 전'); rem.textContent='28'; return; }
+  if (td>28)  { num.textContent='완료'; sub.textContent='6/29 마감'; list.innerHTML=msg('프로젝트가 완료되었습니다 🎉'); rem.textContent='0'; return; }
+  num.textContent='D'+td; sub.textContent=DD[td];
+  const active=TASKS.filter(t=>t.ds<=td&&t.de>=td);
+  list.innerHTML=active.length ? active.map(t=>{
+    const i=TASKS.indexOf(t),s=STATE.statuses[i];
+    return `<div class="td-task"><div class="td-phase-dot" style="background:${PC[t.phase]}"></div><span>${t.name}</span><span class="td-task-st">${SI[s]}</span></div>`;
+  }).join('') : msg('오늘 해당 태스크 없음');
+  rem.textContent=Math.max(0,28-td);
 }
+function msg(t){return`<div style="font-size:.74rem;color:rgba(255,255,255,.4)">${t}</div>`;}
 
-/* ── Gantt Header (date row) ── */
-function buildGanttHeader(td) {
-  const row = document.getElementById('ganttDateRow');
-  row.innerHTML = '<div class="g-date-spacer"></div>';
+/* ══ GANTT DATE ROW ══ */
+function buildDateRow(td) {
+  const row=document.getElementById('gDateRow');
+  row.innerHTML='<div class="g-dspace"></div>';
   for (let d=1;d<=28;d++) {
-    const md = MONTH_DATES[d];
-    const [m,day] = md.split('/');
-    const cell = document.createElement('div');
-    cell.className = 'g-date-cell' + (d===td?' today-col':'');
-    cell.innerHTML = `<div class="g-month">${m}/${day}</div>`;
+    const [m,day]=MD[d].split('/');
+    const cell=document.createElement('div');
+    cell.className='g-dcell'+(d===td?' g-today':'');
+    cell.innerHTML=`<div class="g-dm">${m}/${day}</div>`;
     row.appendChild(cell);
   }
 }
 
-/* ── Gantt Body ── */
+/* ══ GANTT BODY ══ */
 function buildGantt(td) {
-  const body = document.getElementById('ganttBody');
-  body.innerHTML = '';
-
-  const SECS = [
-    {label:'Phase 1 · 기초 구축',  idx:[0,1,2,3,4]},
-    {label:'RL 독립 트랙',         idx:[5,11,22,29]},
-    {label:'Phase 2 · 컴포넌트',   idx:[6,7,8,9,10,12,13,14,15]},
-    {label:'Phase 3 · 기능 완성',  idx:[16,17,18,19,20,21,23]},
-    {label:'Phase 4 · 통합 & 테스트', idx:[24,25,26,27]},
-    {label:'Phase 5 · 마무리',     idx:[28,30,31]},
+  const body=document.getElementById('gBody');
+  body.innerHTML='';
+  const SECS=[
+    {label:'Phase 1 · 기초 구축',   idx:[0,1,2,3,4]},
+    {label:'RL 독립 트랙',           idx:[5,11,22,29]},
+    {label:'Phase 2 · 컴포넌트',     idx:[6,7,8,9,10,12,13,14,15]},
+    {label:'Phase 3 · 기능 완성',    idx:[16,17,18,19,20,21,23]},
+    {label:'Phase 4 · 통합 & 테스트',idx:[24,25,26,27]},
+    {label:'Phase 5 · 마무리',       idx:[28,30,31]},
   ];
+  SECS.forEach(sec=>{
+    const sh=document.createElement('div');
+    sh.style.cssText='display:grid;grid-template-columns:192px 1fr;align-items:center;gap:8px;padding:10px 0 3px';
+    sh.innerHTML=`<div class="g-shdr-txt">${sec.label}</div><div class="g-shdr-line"></div>`;
+    body.appendChild(sh);
 
-  SECS.forEach(sec => {
-    /* section label row */
-    const secRow = document.createElement('div');
-    secRow.className = 'g-sec-row';
-    secRow.innerHTML = `<div class="g-sec-name">${sec.label}</div><div class="g-sec-line"></div>`;
-    body.appendChild(secRow);
+    sec.idx.forEach(ti=>{
+      if(ti>=TASKS.length)return;
+      const t=TASKS[ti], done=STATE.statuses[ti]===2;
+      const color=PC[t.phase]||'var(--rl)';
+      const row=document.createElement('div');
+      row.className='g-trow';
 
-    sec.idx.forEach(ti => {
-      if (ti >= TASKS.length) return;
-      const t = TASKS[ti];
-      const isDone = STATE.statuses[ti] === 2;
-      const color  = PC[t.phase] || 'var(--rl)';
-      const sdot   = SDOT_CLR[STATE.statuses[ti]];
+      const nm=document.createElement('div');
+      nm.className='g-tname'+(done?' dn':'');
+      nm.innerHTML=`<div class="g-sdot" style="background:${SDK[STATE.statuses[ti]]}"></div>${t.name}`;
+      nm.title=t.name; row.appendChild(nm);
 
-      const row = document.createElement('div');
-      row.className = 'g-row';
-
-      /* task name */
-      const nm = document.createElement('div');
-      nm.className = 'g-name' + (isDone?' done-name':'');
-      nm.innerHTML = `<div class="g-sdot" style="background:${sdot}"></div>${t.name}`;
-      nm.title = t.name;
-      row.appendChild(nm);
-
-      /* day cells */
-      for (let d=1;d<=28;d++) {
-        const cell = document.createElement('div');
-        cell.className = 'g-cell' + (d===td?' today-bg':'');
-
-        const inRange = d>=t.ds && d<=t.de;
-        if (inRange) {
-          const bar = document.createElement('div');
-          let cls = 'g-bar';
-          if (t.ds===t.de)        cls += ' bar-only';
-          else if (d===t.ds)      cls += ' bar-s';
-          else if (d===t.de)      cls += ' bar-e';
-          else                    cls += ' bar-m';
-          if (isDone) cls += ' done-bar';
-          bar.className = cls;
-          bar.style.background = color;
+      for(let d=1;d<=28;d++){
+        const cell=document.createElement('div');
+        cell.className='g-cell'+(d===td?' t-bg':'');
+        if(d>=t.ds&&d<=t.de){
+          const bar=document.createElement('div');
+          let cls='g-bar ';
+          if(t.ds===t.de)       cls+='full';
+          else if(d===t.ds)     cls+='bs';
+          else if(d===t.de)     cls+='be';
+          else                  cls+='bm';
+          if(done) cls+=' dn';
+          bar.className=cls; bar.style.background=color;
           cell.appendChild(bar);
         }
-
-        if (d===td) {
-          const tl = document.createElement('div'); tl.className='g-today-line'; cell.appendChild(tl);
-        }
-        if (d===17||d===21) {
-          const cp = document.createElement('div'); cp.className='g-cp-line'; cell.appendChild(cp);
-        }
+        if(d===td){const l=document.createElement('div');l.className='g-today';cell.appendChild(l);}
+        if(d===17||d===21){const l=document.createElement('div');l.className='g-cp';cell.appendChild(l);}
         row.appendChild(cell);
       }
       body.appendChild(row);
@@ -718,192 +655,168 @@ function buildGantt(td) {
   });
 }
 
-/* ── Phase Cards ── */
+/* ══ PHASE CARDS ══ */
 function buildPhaseCards() {
-  const PM = [
-    {k:1,   label:'Phase 1 · 기초 구축',      dates:'D1~D7 · 5/20~5/29'},
-    {k:2,   label:'Phase 2 · 컴포넌트 개발',  dates:'D4~D13 · 5/25~6/8'},
-    {k:3,   label:'Phase 3 · 기능 완성',      dates:'D11~D17 · 6/4~6/12'},
-    {k:4,   label:'Phase 4 · 통합 & 테스트',  dates:'D16~D25 · 6/11~6/24'},
-    {k:5,   label:'Phase 5 · 마무리',         dates:'D23~D28 · 6/22~6/29'},
-    {k:'rl',label:'RL 독립 트랙',             dates:'5/26~D25'},
+  const PM=[
+    {k:1,   label:'Phase 1 · 기초',       dates:'D1~D7 · 5/20~5/29'},
+    {k:2,   label:'Phase 2 · 컴포넌트',   dates:'D4~D13 · 5/25~6/8'},
+    {k:3,   label:'Phase 3 · 기능완성',   dates:'D11~D17 · 6/4~6/12'},
+    {k:4,   label:'Phase 4 · 통합',       dates:'D16~D25 · 6/11~6/24'},
+    {k:5,   label:'Phase 5 · 마무리',     dates:'D23~D28 · 6/22~6/29'},
+    {k:'rl',label:'RL 독립 트랙',         dates:'5/26~D25'},
   ];
-  const container = document.getElementById('phaseCards');
-  container.innerHTML = '';
-  PM.forEach(pm => {
-    const tasks = TASKS.filter(t=>t.phase===pm.k);
-    const done  = tasks.filter(t=>STATE.statuses[TASKS.indexOf(t)]===2).length;
-    const pct   = tasks.length ? Math.round(done/tasks.length*100) : 0;
-    const color = PC[pm.k];
-    const card  = document.createElement('div');
-    card.className = 'phase-card';
-    card.style.borderLeftColor = color;
-    card.innerHTML = `
-      <h4 style="color:${color}">${pm.label}</h4>
-      <div class="pc-dates">${pm.dates}</div>
-      <div class="pc-prog-text">${done}/${tasks.length} 완료 · ${pct}%</div>
-      <div class="pc-bar"><div class="pc-fill" style="width:${pct}%;background:${color}"></div></div>`;
-    container.appendChild(card);
+  const grid=document.getElementById('phaseGrid');
+  grid.innerHTML='';
+  PM.forEach(pm=>{
+    const tasks=TASKS.filter(t=>t.phase===pm.k);
+    const done=tasks.filter(t=>STATE.statuses[TASKS.indexOf(t)]===2).length;
+    const pct=tasks.length?Math.round(done/tasks.length*100):0;
+    const c=PC[pm.k];
+    const card=document.createElement('div');
+    card.className='pc'; card.style.borderLeftColor=c;
+    card.innerHTML=`<h4 style="color:${c}">${pm.label}</h4><div class="pcd">${pm.dates}</div><div class="pcp">${done}/${tasks.length} 완료 · ${pct}%</div><div class="pc-bar"><div class="pc-fill" style="width:${pct}%;background:${c}"></div></div>`;
+    grid.appendChild(card);
   });
 }
 
-/* ── Calendar ── */
+/* ══ CALENDAR ══ */
 function buildCalendar(td) {
-  const cg = document.getElementById('calGrid');
-  for (let d=1;d<=28;d++) {
-    const c = document.createElement('div');
-    c.className = 'cal-cell'+(d===td?' today-d':'');
-    c.innerHTML = `<div class="dn">D${d}</div><div class="dt">${DAY_DATES[d]}</div>`;
+  const cg=document.getElementById('calGrid');
+  for(let d=1;d<=28;d++){
+    const c=document.createElement('div');
+    c.className='ccell'+(d===td?' td':'');
+    c.innerHTML=`<div class="dn">D${d}</div><div class="dd">${DD[d]}</div>`;
     cg.appendChild(c);
   }
 }
-function toggleCal() { document.getElementById('calGrid').classList.toggle('hidden'); }
 
-/* ── Task Table ── */
+/* ══ TABLE ══ */
 function buildTable() {
-  const tbody = document.getElementById('taskBody');
-  TASKS.forEach((t,i) => {
-    const s     = STATE.statuses[i];
-    const color = PC[t.phase] || 'var(--rl)';
-    const rb    = t.resp.map(r=>`<span class="resp-badge" style="background:${RC[r]||'#607D8B'}">${r}</span>`).join('');
-    const tr    = document.createElement('tr');
-    tr.className='task-row'; tr.id='tr'+i;
-    tr.style.borderLeft = '3px solid '+color;
-    if (s===2) tr.classList.add('done-row');
-    tr.onclick = ()=>toggleDetail(i);
-    tr.innerHTML = `
-      <td><button class="expand-btn" id="btn${i}" onclick="event.stopPropagation();toggleDetail(${i})">▶</button></td>
-      <td><button class="status-btn ${SCLS[s]}" onclick="cycleStatus(${i},event)">${SICONS[s]} ${STATUSES[s]}</button></td>
-      <td><span class="phase-badge" style="background:${color}">${PL[t.phase]}</span></td>
-      <td class="task-name" style="font-weight:600">${t.name}</td>
-      <td style="font-size:.71rem;font-weight:700;white-space:nowrap">D${t.ds}–D${t.de}</td>
-      <td style="font-size:.7rem;color:var(--text-muted)">${MONTH_DATES[t.ds]}</td>
-      <td style="font-size:.7rem;color:var(--text-muted)">${MONTH_DATES[t.de]}</td>
+  const tbody=document.getElementById('tbody');
+  TASKS.forEach((t,i)=>{
+    const s=STATE.statuses[i], color=PC[t.phase]||'var(--rl)';
+    const rb=t.resp.map(r=>`<span class="rtag" style="background:${RC[r]||'#607D8B'}">${r}</span>`).join('');
+    const tr=document.createElement('tr');
+    tr.className='t-row'; tr.id='tr'+i;
+    tr.style.borderLeft='3px solid '+color;
+    if(s===2) tr.classList.add('done');
+    tr.onclick=()=>toggleDet(i);
+    tr.innerHTML=`
+      <td><button class="xbtn" id="xb${i}" onclick="event.stopPropagation();toggleDet(${i})">▶</button></td>
+      <td><button class="sbtn ${SC[s]}" onclick="cycleS(${i},event)">${SI[s]} ${SN[s]}</button></td>
+      <td><span class="ptag" style="background:${color}">${PL[t.phase]}</span></td>
+      <td class="tname" style="font-weight:500">${t.name}</td>
+      <td style="font-size:.69rem;font-weight:600;white-space:nowrap;color:var(--text2)">D${t.ds}–D${t.de}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${MD[t.ds]}</td>
+      <td style="font-size:.68rem;color:var(--muted)">${MD[t.de]}</td>
       <td>${rb}</td>`;
     tbody.appendChild(tr);
-
-    const dtr = document.createElement('tr');
-    dtr.className='detail-row'; dtr.id='detail'+i;
-    dtr.innerHTML = `<td colspan="8"><div class="detail-inner">
-      <div class="det-block"><h5>세부 구현</h5><p>${t.detail}</p></div>
-      <div class="det-block"><h5>기술 / 하드웨어</h5><p>${t.tech}</p></div>
-      <div class="det-block"><h5>완료 기준</h5><p>${t.done}</p></div>
-      <div class="det-block"><h5>다음 단계 진입 조건</h5><p>${t.next}</p></div>
-      <div class="notes-block"><h5>📝 팀 메모 (자동 저장 · 공유)</h5>
-        <textarea class="notes-input" id="note${i}" placeholder="진행 상황, 이슈, 링크 등을 자유롭게 입력..."
-          oninput="onNoteChange(${i},this.value)">${STATE.notes[i]||''}</textarea>
-        <div class="notes-saved" id="ns${i}">✓ 저장됨</div>
+    const dtr=document.createElement('tr');
+    dtr.className='det-row'; dtr.id='det'+i;
+    dtr.innerHTML=`<td colspan="8"><div class="det-inner">
+      <div class="db"><h5>세부 구현</h5><p>${t.detail}</p></div>
+      <div class="db"><h5>기술 / 하드웨어</h5><p>${t.tech}</p></div>
+      <div class="db"><h5>완료 기준</h5><p>${t.done}</p></div>
+      <div class="db"><h5>다음 단계 진입 조건</h5><p>${t.next}</p></div>
+      <div class="nb"><h5>📝 팀 메모 (자동 저장 · 공유)</h5>
+        <textarea class="ni" id="ni${i}" placeholder="진행 상황, 이슈, 링크 등..."
+          oninput="noteChange(${i},this.value)">${STATE.notes[i]||''}</textarea>
+        <div class="nsaved" id="ns${i}">✓ 저장됨</div>
       </div></div></td>`;
     tbody.appendChild(dtr);
   });
 }
 
-/* ── Status cycle ── */
-function cycleStatus(idx, e) {
+/* ══ STATUS CYCLE ══ */
+function cycleS(idx, e) {
   e.stopPropagation();
-  STATE.statuses[idx] = (STATE.statuses[idx]+1)%4;
+  STATE.statuses[idx]=(STATE.statuses[idx]+1)%4;
   renderRow(idx);
-  updateHeaderProgress();
-  buildTodayPanel(getTodayD());
+  updateProgress();
+  buildToday(todayD());
   buildPhaseCards();
-  buildGantt(getTodayD());
-  saveState();
-  if (USE_FIREBASE) showToast('팀원들에게 동기화 중...');
+  buildGantt(todayD());
+  save();
+  if(USE_FB && fbRef) toast('동기화 중...');
 }
 function renderRow(idx) {
-  const s  = STATE.statuses[idx];
-  const tr = document.getElementById('tr'+idx); if(!tr)return;
-  const btn = tr.querySelector('.status-btn');
-  if (btn) { btn.className='status-btn '+SCLS[s]; btn.textContent=SICONS[s]+' '+STATUSES[s]; }
-  if (s===2) tr.classList.add('done-row'); else tr.classList.remove('done-row');
+  const s=STATE.statuses[idx], tr=document.getElementById('tr'+idx); if(!tr)return;
+  const btn=tr.querySelector('.sbtn');
+  if(btn){btn.className='sbtn '+SC[s];btn.textContent=SI[s]+' '+SN[s];}
+  if(s===2)tr.classList.add('done');else tr.classList.remove('done');
 }
-
-/* ── Remote update ── */
-function updateAllRowStatuses() {
-  TASKS.forEach((_,i) => {
-    const s  = STATE.statuses[i];
-    const tr = document.getElementById('tr'+i); if(!tr)return;
-    const btn = tr.querySelector('.status-btn');
-    if (btn) { btn.className='status-btn '+SCLS[s]; btn.textContent=SICONS[s]+' '+STATUSES[s]; }
-    if (s===2) tr.classList.add('done-row'); else tr.classList.remove('done-row');
-  });
-  reapplyFilter();
+function updateRowStatuses() {
+  TASKS.forEach((_,i)=>renderRow(i));
+  applyFilter();
 }
-function updateNotesFromRemote() {
-  TASKS.forEach((_,i) => {
-    const ta = document.getElementById('note'+i);
-    if (!ta || document.activeElement===ta) return;
-    ta.value = STATE.notes[i]||'';
+function syncNotes() {
+  TASKS.forEach((_,i)=>{
+    const ta=document.getElementById('ni'+i);
+    if(!ta||document.activeElement===ta)return;
+    ta.value=STATE.notes[i]||'';
   });
 }
 
-/* ── Notes ── */
-let noteTimers = {};
-function onNoteChange(idx, val) {
-  STATE.notes[idx] = val;
-  clearTimeout(noteTimers[idx]);
-  noteTimers[idx] = setTimeout(()=>{
-    saveState();
-    const saved = document.getElementById('ns'+idx);
-    if (saved) { saved.classList.add('show'); setTimeout(()=>saved.classList.remove('show'),1500); }
-    if (USE_FIREBASE) showToast('메모 저장됨');
-  }, 800);
+/* ══ NOTES ══ */
+let nt={};
+function noteChange(idx,val){
+  STATE.notes[idx]=val;
+  clearTimeout(nt[idx]);
+  nt[idx]=setTimeout(()=>{
+    save();
+    const ns=document.getElementById('ns'+idx);
+    if(ns){ns.classList.add('show');setTimeout(()=>ns.classList.remove('show'),1400);}
+  },800);
 }
 
-/* ── Toggle detail ── */
-function toggleDetail(i) {
-  const d = document.getElementById('detail'+i), b = document.getElementById('btn'+i);
-  const isOpen = d.classList.toggle('open');
-  b.textContent = isOpen?'▼':'▶'; b.classList.toggle('open',isOpen);
+/* ══ DETAIL TOGGLE ══ */
+function toggleDet(i){
+  const d=document.getElementById('det'+i),b=document.getElementById('xb'+i);
+  const open=d.classList.toggle('open');
+  b.textContent=open?'▼':'▶'; b.classList.toggle('open',open);
 }
 
-/* ── Filter ── */
-let curFilter = 'all';
-const FMAP = {all:'fAll',p1:'fP1',p2:'fP2',p3:'fP3',p4:'fP4',p5:'fP5',rl:'fRl',s0:'fS0',s1:'fS1',s2:'fS2',s3:'fS3',today:'fToday'};
-
-function filterTable(f) {
-  curFilter = f;
-  document.querySelectorAll('.f-btn').forEach(b=>{b.classList.remove('active');});
+/* ══ FILTER ══ */
+let curF='all';
+const FM={all:'fAll',p1:'fP1',p2:'fP2',p3:'fP3',p4:'fP4',p5:'fP5',rl:'fRl',s0:'fS0',s1:'fS1',s2:'fS2',s3:'fS3',today:'fTd'};
+function setFilter(f){
+  curF=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active'));
-  const btn = document.getElementById(FMAP[f]);
-  if (btn) btn.classList.add('active');
-  /* highlight stat card */
-  const scMap = {all:'.sc-all',s0:'.sc-s0',s1:'.sc-s1',s2:'.sc-s2',s3:'.sc-s3'};
-  if (scMap[f]) document.querySelector(scMap[f])?.classList.add('active');
-
-  const td = getTodayD();
-  document.querySelectorAll('.task-row').forEach((tr,i) => {
-    const t = TASKS[i], s = STATE.statuses[i];
-    let show = true;
-    if      (f==='all')   show=true;
-    else if (f==='p1')    show=t.phase===1;
-    else if (f==='p2')    show=t.phase===2;
-    else if (f==='p3')    show=t.phase===3;
-    else if (f==='p4')    show=t.phase===4;
-    else if (f==='p5')    show=t.phase===5;
-    else if (f==='rl')    show=t.phase==='rl';
-    else if (f==='s0')    show=s===0;
-    else if (f==='s1')    show=s===1;
-    else if (f==='s2')    show=s===2;
-    else if (f==='s3')    show=s===3;
-    else if (f==='today') show=td>0&&td<=28&&t.ds<=td&&t.de>=td;
-    tr.classList.toggle('hidden-filter',!show);
-    const dtr=document.getElementById('detail'+i);
-    if (dtr&&!show) dtr.classList.remove('open');
+  const btn=document.getElementById(FM[f]); if(btn)btn.classList.add('on');
+  const sm={all:'.all',s0:'.s0',s1:'.s1',s2:'.s2',s3:'.s3'};
+  if(sm[f])document.querySelector(sm[f])?.classList.add('active');
+  applyFilter();
+}
+function applyFilter(){
+  const td=todayD();
+  document.querySelectorAll('.t-row').forEach((tr,i)=>{
+    const t=TASKS[i],s=STATE.statuses[i];
+    let show=true;
+    if     (curF==='p1')   show=t.phase===1;
+    else if(curF==='p2')   show=t.phase===2;
+    else if(curF==='p3')   show=t.phase===3;
+    else if(curF==='p4')   show=t.phase===4;
+    else if(curF==='p5')   show=t.phase===5;
+    else if(curF==='rl')   show=t.phase==='rl';
+    else if(curF==='s0')   show=s===0;
+    else if(curF==='s1')   show=s===1;
+    else if(curF==='s2')   show=s===2;
+    else if(curF==='s3')   show=s===3;
+    else if(curF==='today')show=td>0&&td<=28&&t.ds<=td&&t.de>=td;
+    tr.classList.toggle('hf',!show);
+    const dt=document.getElementById('det'+i); if(dt&&!show)dt.classList.remove('open');
   });
 }
-function reapplyFilter() { filterTable(curFilter); }
 
-/* ── Reset ── */
-function resetTracker() {
-  if (!confirm('모든 팀원의 상태와 메모가 초기화됩니다.\n정말 진행하시겠습니까?')) return;
-  STATE.statuses = Array(TASKS.length).fill(0);
-  STATE.notes    = Array(TASKS.length).fill('');
-  saveState();
-  location.reload();
+/* ══ RESET ══ */
+function resetAll(){
+  if(!confirm('모든 팀원의 상태와 메모가 초기화됩니다. 계속할까요?'))return;
+  STATE.statuses=Array(TASKS.length).fill(0);
+  STATE.notes=Array(TASKS.length).fill('');
+  save(); location.reload();
 }
 
-/* ── Start ── */
 initApp();
 </script>
 </body>
